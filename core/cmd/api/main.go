@@ -11,6 +11,7 @@ import (
 	db "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/config"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/server"
 
 	_ "github.com/IgorGrieder/Desafio-BTG/tree/main/core/docs"
 )
@@ -57,11 +58,11 @@ func main() {
 	fmt.Println("✓ SQLC queries initialized")
 
 	// Initialize and start HTTP server with dependency injection
-	server := NewServer(cfg.Server.Host, cfg.Server.Port, queries)
+	srv := server.NewServer(cfg.Server.Host, cfg.Server.Port, queries)
 
 	// Start server in goroutine
 	go func() {
-		if err := server.Start(); err != nil {
+		if err := srv.Start(); err != nil {
 			log.Fatalf("Server failed to start: %v", err)
 		}
 	}()
@@ -73,7 +74,7 @@ func main() {
 
 	fmt.Println("\nShutting down server...")
 
-	if err := server.Shutdown(); err != nil {
+	if err := srv.Shutdown(); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 
