@@ -172,6 +172,11 @@ go run main.go
 }
 ```
 
+## Architecture Diagram
+
+📊 **Visual Diagram**: Open `architecture.drawio` with [draw.io](https://app.diagrams.net/) for a complete visual representation of the hexagonal architecture.
+
+
 ## License
 
 MIT

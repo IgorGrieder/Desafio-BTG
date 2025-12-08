@@ -1,0 +1,320 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Hexagonal Architecture - BTG Project" id="hexagonal-architecture">
+    <mxGraphModel dx="1434" dy="796" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="BTG Pactual - Order Processing System&#xa;Hexagonal Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="500" y="20" width="600" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- CORE API SERVICE -->
+        <mxCell id="core-container" value="CORE API SERVICE (REST)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;fontSize=16;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="80" y="120" width="680" height="500" as="geometry" />
+        </mxCell>
+
+        <!-- Core Domain -->
+        <mxCell id="core-domain" value="DOMAIN&#xa;(Business Entities)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="300" y="280" width="240" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="core-domain-detail" value="order.go&#xa;(Order, OrderItem)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="320" y="310" width="200" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Core Application Layer -->
+        <mxCell id="core-application" value="APPLICATION LAYER&#xa;(Use Cases &amp; Ports)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;verticalAlign=top" vertex="1" parent="1">
+          <mxGeometry x="280" y="380" width="280" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="core-ports" value="Ports (Interfaces)&#xa;OrderRepository" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="300" y="415" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="core-services" value="Services&#xa;(Business Logic)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="430" y="415" width="120" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Core Adapters -->
+        <!-- HTTP Adapter -->
+        <mxCell id="core-http-adapter" value="HTTP ADAPTER (Inbound)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;verticalAlign=top" vertex="1" parent="1">
+          <mxGeometry x="100" y="180" width="200" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="core-http-router" value="router.go" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="110" y="210" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="core-http-handler" value="order_handler.go" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="110" y="245" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="core-http-validator" value="validator.go" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="110" y="280" width="180" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Database Adapter -->
+        <mxCell id="core-db-adapter" value="DATABASE ADAPTER (Outbound)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;verticalAlign=top" vertex="1" parent="1">
+          <mxGeometry x="540" y="180" width="200" height="180" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="core-db-pool" value="db.go (pgxpool)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="550" y="210" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="core-db-migrations" value="migrations/&#xa;(Goose)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="550" y="245" width="85" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="core-db-queries" value="queries/&#xa;(SQLC)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="645" y="245" width="85" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="core-db-sqlc" value="sqlc/ (Generated)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="550" y="290" width="180" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- CMD Layer -->
+        <mxCell id="core-cmd" value="CMD (Activation Layer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1;verticalAlign=top" vertex="1" parent="1">
+          <mxGeometry x="310" y="500" width="220" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="core-cmd-main" value="cmd/api/main.go&#xa;(Wiring &amp; Bootstrap)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="320" y="530" width="90" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="core-cmd-server" value="cmd/api/server.go&#xa;(HTTP Server)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="420" y="530" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- CONSUMER MICROSERVICE -->
+        <mxCell id="ms-container" value="CONSUMER MICROSERVICE (RabbitMQ)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;fontSize=16;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="840" y="120" width="680" height="500" as="geometry" />
+        </mxCell>
+
+        <!-- MS Domain -->
+        <mxCell id="ms-domain" value="DOMAIN&#xa;(Business Entities)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1060" y="280" width="240" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ms-domain-detail" value="order.go&#xa;(Order, OrderItem)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="1080" y="310" width="200" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- MS Application Layer -->
+        <mxCell id="ms-application" value="APPLICATION LAYER&#xa;(Use Cases &amp; Ports)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;verticalAlign=top" vertex="1" parent="1">
+          <mxGeometry x="1040" y="380" width="280" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ms-ports" value="Ports (Interfaces)&#xa;OrderRepository" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="1060" y="415" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ms-services" value="Services&#xa;(Business Logic)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="1190" y="415" width="120" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- MS Adapters -->
+        <!-- RabbitMQ Adapter -->
+        <mxCell id="ms-rabbitmq-adapter" value="RABBITMQ ADAPTER (Inbound)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;verticalAlign=top" vertex="1" parent="1">
+          <mxGeometry x="860" y="180" width="200" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ms-rabbitmq-consumer" value="consumer.go&#xa;(Message Handler)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="870" y="220" width="180" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ms-rabbitmq-todo" value="TODO" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontColor=#FF0000;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="930" y="275" width="60" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- MS Database Adapter -->
+        <mxCell id="ms-db-adapter" value="DATABASE ADAPTER (Outbound)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;verticalAlign=top" vertex="1" parent="1">
+          <mxGeometry x="1300" y="180" width="200" height="180" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ms-db-pool" value="db.go (pgxpool)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="1310" y="210" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ms-db-migrations" value="migrations/&#xa;(Goose)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="1310" y="245" width="85" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ms-db-queries" value="queries/&#xa;(SQLC)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="1405" y="245" width="85" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- MS CMD Layer -->
+        <mxCell id="ms-cmd" value="CMD (Activation Layer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1;verticalAlign=top" vertex="1" parent="1">
+          <mxGeometry x="1070" y="500" width="220" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ms-cmd-main" value="cmd/consumer/main.go&#xa;(Wiring)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="1080" y="530" width="90" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ms-cmd-server" value="cmd/consumer/server.go&#xa;(Consumer)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="1180" y="530" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Infrastructure -->
+        <mxCell id="infra-container" value="INFRASTRUCTURE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;verticalAlign=top;fontSize=16;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="80" y="680" width="1440" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="postgres" value="PostgreSQL 17&#xa;(btg_orders)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="400" y="720" width="120" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="rabbitmq" value="RabbitMQ&#xa;(orders queue)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="900" y="720" width="120" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="docker" value="Docker Compose" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1180" y="760" width="120" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows/Connections -->
+        <!-- Core connections -->
+        <mxCell id="arrow1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1" source="core-http-adapter" target="core-application">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arrow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;dashed=1;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1" source="core-db-adapter" target="core-application">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arrow3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;dashed=1;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1" source="core-application" target="core-domain">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arrow4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;strokeWidth=3;strokeColor=#0066CC;" edge="1" parent="1" source="core-cmd" target="core-application">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arrow5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;strokeColor=#82b366;" edge="1" parent="1" source="core-db-adapter" target="postgres">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="650" />
+              <mxPoint x="460" y="650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- MS connections -->
+        <mxCell id="arrow6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1" source="ms-rabbitmq-adapter" target="ms-application">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arrow7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;dashed=1;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1" source="ms-db-adapter" target="ms-application">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arrow8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;dashed=1;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1" source="ms-application" target="ms-domain">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arrow9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;strokeWidth=3;strokeColor=#0066CC;" edge="1" parent="1" source="ms-cmd" target="ms-application">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arrow10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;strokeColor=#82b366;" edge="1" parent="1" source="ms-db-adapter" target="postgres">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1400" y="650" />
+              <mxPoint x="460" y="650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;strokeColor=#d6b656;" edge="1" parent="1" source="ms-rabbitmq-adapter" target="rabbitmq">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- External -->
+        <mxCell id="client" value="HTTP Client&#xa;(Browser/API)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#10739e;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="140" y="40" width="120" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arrow-client" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#0066CC;" edge="1" parent="1" source="client" target="core-http-adapter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="80" y="880" width="400" height="180" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-title" value="LEGEND" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="100" y="890" width="100" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-domain" value="Domain (Business Logic)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="100" y="930" width="150" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-app" value="Application Layer (Ports)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="100" y="970" width="150" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-adapter" value="Adapters (Infrastructure)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="100" y="1010" width="150" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-cmd" value="CMD (Wiring/Bootstrap)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="280" y="930" width="150" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-arrow1" value="" style="endArrow=classic;html=1;strokeWidth=3;strokeColor=#0066CC;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="290" y="985" as="sourcePoint" />
+            <mxPoint x="360" y="985" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-arrow1-text" value="Activates/Wires" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="370" y="975" width="90" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-arrow2" value="" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#666666;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="290" y="1015" as="sourcePoint" />
+            <mxPoint x="360" y="1015" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-arrow2-text" value="Depends On" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9" vertex="1" parent="1">
+          <mxGeometry x="370" y="1005" width="90" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Technologies Box -->
+        <mxCell id="tech-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="520" y="880" width="400" height="180" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tech-title" value="TECHNOLOGIES" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="540" y="890" width="150" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tech-list" value="• Go 1.25&#xa;• PostgreSQL 17&#xa;• pgx/v5 (Connection Pool)&#xa;• SQLC (Type-safe SQL)&#xa;• Goose (Migrations)&#xa;• RabbitMQ&#xa;• Swaggo (API Docs)&#xa;• go-playground/validator" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="540" y="920" width="360" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Patterns Box -->
+        <mxCell id="patterns-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="960" y="880" width="400" height="180" as="geometry" />
+        </mxCell>
+
+        <mxCell id="patterns-title" value="ARCHITECTURAL PATTERNS" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="980" y="890" width="250" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="patterns-list" value="• Hexagonal Architecture&#xa;• Ports &amp; Adapters&#xa;• Dependency Inversion&#xa;• Clean Architecture&#xa;• Domain-Driven Design&#xa;• Repository Pattern&#xa;• Dependency Injection&#xa;• Single Responsibility" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="980" y="920" width="360" height="130" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
