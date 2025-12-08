@@ -1,0 +1,174 @@
+basePath: /
+definitions:
+  http.CreateOrderItemRequest:
+    properties:
+      preco:
+        example: 1.1
+        type: number
+      produto:
+        example: lápis
+        minLength: 1
+        type: string
+      quantidade:
+        example: 100
+        type: integer
+    required:
+    - preco
+    - produto
+    - quantidade
+    type: object
+  http.CreateOrderRequest:
+    properties:
+      codigoCliente:
+        example: 1
+        type: integer
+      codigoPedido:
+        example: 1001
+        type: integer
+      itens:
+        items:
+          $ref: '#/definitions/http.CreateOrderItemRequest'
+        minItems: 1
+        type: array
+    required:
+    - codigoCliente
+    - codigoPedido
+    - itens
+    type: object
+  http.ErrorResponse:
+    properties:
+      details:
+        additionalProperties:
+          type: string
+        type: object
+      error:
+        type: string
+    type: object
+  http.SuccessResponse:
+    properties:
+      data: {}
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@btg.com
+    name: API Support
+  description: API for managing and querying orders
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: BTG Pactual Order Processing API
+  version: "1.0"
+paths:
+  /api/v1/customers/{code}/orders:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all orders for a specific customer
+      parameters:
+      - description: Customer Code
+        in: path
+        minimum: 1
+        name: code
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: List customer orders
+      tags:
+      - customers
+  /api/v1/customers/{code}/orders/count:
+    get:
+      consumes:
+      - application/json
+      description: Get the total number of orders for a specific customer
+      parameters:
+      - description: Customer Code
+        in: path
+        minimum: 1
+        name: code
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Count orders by customer
+      tags:
+      - customers
+  /api/v1/orders:
+    post:
+      consumes:
+      - application/json
+      description: Create a new order with items (for testing purposes)
+      parameters:
+      - description: Order data
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/http.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Create a new order
+      tags:
+      - orders
+  /api/v1/orders/{code}/total:
+    get:
+      consumes:
+      - application/json
+      description: Get the total value of an order by its code
+      parameters:
+      - description: Order Code
+        in: path
+        minimum: 1
+        name: code
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Get total value of an order
+      tags:
+      - orders
+schemes:
+- http
+swagger: "2.0"
