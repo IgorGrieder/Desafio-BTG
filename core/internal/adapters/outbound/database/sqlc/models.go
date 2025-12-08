@@ -5,23 +5,23 @@
 package database
 
 import (
-	"time"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Order struct {
-	ID           int64     `json:"id"`
-	Code         int32     `json:"code"`
-	CustomerCode int32     `json:"customer_code"`
-	TotalValue   string    `json:"total_value"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID           int64            `json:"id"`
+	Code         int32            `json:"code"`
+	CustomerCode int32            `json:"customer_code"`
+	TotalValue   pgtype.Numeric   `json:"total_value"`
+	CreatedAt    pgtype.Timestamp `json:"created_at"`
+	UpdatedAt    pgtype.Timestamp `json:"updated_at"`
 }
 
 type OrderItem struct {
-	ID        int64     `json:"id"`
-	OrderID   int64     `json:"order_id"`
-	Product   string    `json:"product"`
-	Quantity  int32     `json:"quantity"`
-	Price     string    `json:"price"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int64            `json:"id"`
+	OrderID   int64            `json:"order_id"`
+	Product   string           `json:"product"`
+	Quantity  int32            `json:"quantity"`
+	Price     pgtype.Numeric   `json:"price"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
 }

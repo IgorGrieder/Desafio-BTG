@@ -8,7 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database"
+	db "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/config"
 
 	_ "github.com/IgorGrieder/Desafio-BTG/tree/main/core/docs"
@@ -43,17 +44,20 @@ func main() {
 	fmt.Printf("Database: %s\n", cfg.Database.DBName)
 
 	// Initialize database connection
-	db, err := database.NewDB(ctx, cfg.Database.DSN())
+	dbConn, err := db.NewDB(ctx, cfg.Database.DSN())
 	if err != nil {
 		log.Printf("Warning: Failed to connect to database: %v", err)
 		log.Println("Server will start without database connection")
 	} else {
-		defer db.Close()
+		defer dbConn.Close()
 		fmt.Println("Database connection established successfully")
 	}
 
-	// Initialize and start HTTP server
-	server := NewServer(cfg.Server.Host, cfg.Server.Port)
+	queries := database.New(dbConn.Pool)
+	fmt.Println("✓ SQLC queries initialized")
+
+	// Initialize and start HTTP server with dependency injection
+	server := NewServer(cfg.Server.Host, cfg.Server.Port, queries)
 
 	// Start server in goroutine
 	go func() {
@@ -75,4 +79,3 @@ func main() {
 
 	fmt.Println("Server stopped gracefully")
 }
-

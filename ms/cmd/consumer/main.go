@@ -8,7 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/adapters/outbound/database"
+	db "github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/adapters/outbound/database"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/adapters/outbound/database/sqlc"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/config"
 )
 
@@ -28,20 +29,23 @@ func main() {
 	fmt.Printf("Database: %s\n", cfg.Database.DBName)
 
 	// Initialize database connection
-	db, err := database.NewDB(ctx, cfg.Database.DSN())
+	dbConn, err := db.NewDB(ctx, cfg.Database.DSN())
 	if err != nil {
 		log.Printf("Warning: Failed to connect to database: %v", err)
 		log.Println("Consumer will start without database connection")
 	} else {
-		defer db.Close()
+		defer dbConn.Close()
 		fmt.Println("Database connection established successfully")
 	}
 
+	// Initialize SQLC queries
+	queries := database.New(dbConn.Pool)
+	fmt.Println("✓ SQLC queries initialized")
+
 	// TODO: Initialize RabbitMQ connection
-	// TODO: Initialize SQLC queries
-	
-	// Initialize and start consumer
-	consumer := NewConsumer(ctx)
+
+	// Initialize and start consumer with dependency injection
+	consumer := NewConsumer(ctx, queries)
 
 	// Start consumer in goroutine
 	go func() {

@@ -7,6 +7,8 @@ package database
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const countOrdersByCustomer = `-- name: CountOrdersByCustomer :one
@@ -15,7 +17,7 @@ WHERE customer_code = $1
 `
 
 func (q *Queries) CountOrdersByCustomer(ctx context.Context, customerCode int32) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countOrdersByCustomer, customerCode)
+	row := q.db.QueryRow(ctx, countOrdersByCustomer, customerCode)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -28,13 +30,13 @@ RETURNING id, code, customer_code, total_value, created_at, updated_at
 `
 
 type CreateOrderParams struct {
-	Code         int32  `json:"code"`
-	CustomerCode int32  `json:"customer_code"`
-	TotalValue   string `json:"total_value"`
+	Code         int32          `json:"code"`
+	CustomerCode int32          `json:"customer_code"`
+	TotalValue   pgtype.Numeric `json:"total_value"`
 }
 
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error) {
-	row := q.db.QueryRowContext(ctx, createOrder, arg.Code, arg.CustomerCode, arg.TotalValue)
+	row := q.db.QueryRow(ctx, createOrder, arg.Code, arg.CustomerCode, arg.TotalValue)
 	var i Order
 	err := row.Scan(
 		&i.ID,
@@ -54,14 +56,14 @@ RETURNING id, order_id, product, quantity, price, created_at
 `
 
 type CreateOrderItemParams struct {
-	OrderID  int64  `json:"order_id"`
-	Product  string `json:"product"`
-	Quantity int32  `json:"quantity"`
-	Price    string `json:"price"`
+	OrderID  int64          `json:"order_id"`
+	Product  string         `json:"product"`
+	Quantity int32          `json:"quantity"`
+	Price    pgtype.Numeric `json:"price"`
 }
 
 func (q *Queries) CreateOrderItem(ctx context.Context, arg CreateOrderItemParams) (OrderItem, error) {
-	row := q.db.QueryRowContext(ctx, createOrderItem,
+	row := q.db.QueryRow(ctx, createOrderItem,
 		arg.OrderID,
 		arg.Product,
 		arg.Quantity,
@@ -85,7 +87,7 @@ WHERE code = $1
 `
 
 func (q *Queries) GetOrderByCode(ctx context.Context, code int32) (Order, error) {
-	row := q.db.QueryRowContext(ctx, getOrderByCode, code)
+	row := q.db.QueryRow(ctx, getOrderByCode, code)
 	var i Order
 	err := row.Scan(
 		&i.ID,
@@ -104,7 +106,7 @@ WHERE id = $1
 `
 
 func (q *Queries) GetOrderByID(ctx context.Context, id int64) (Order, error) {
-	row := q.db.QueryRowContext(ctx, getOrderByID, id)
+	row := q.db.QueryRow(ctx, getOrderByID, id)
 	var i Order
 	err := row.Scan(
 		&i.ID,
@@ -123,7 +125,7 @@ WHERE order_id = $1
 `
 
 func (q *Queries) GetOrderItems(ctx context.Context, orderID int64) ([]OrderItem, error) {
-	rows, err := q.db.QueryContext(ctx, getOrderItems, orderID)
+	rows, err := q.db.Query(ctx, getOrderItems, orderID)
 	if err != nil {
 		return nil, err
 	}
@@ -143,9 +145,6 @@ func (q *Queries) GetOrderItems(ctx context.Context, orderID int64) ([]OrderItem
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -159,7 +158,7 @@ ORDER BY created_at DESC
 `
 
 func (q *Queries) GetOrdersByCustomerCode(ctx context.Context, customerCode int32) ([]Order, error) {
-	rows, err := q.db.QueryContext(ctx, getOrdersByCustomerCode, customerCode)
+	rows, err := q.db.Query(ctx, getOrdersByCustomerCode, customerCode)
 	if err != nil {
 		return nil, err
 	}
@@ -179,9 +178,6 @@ func (q *Queries) GetOrdersByCustomerCode(ctx context.Context, customerCode int3
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -193,9 +189,9 @@ SELECT total_value FROM orders
 WHERE code = $1
 `
 
-func (q *Queries) GetTotalByOrderCode(ctx context.Context, code int32) (string, error) {
-	row := q.db.QueryRowContext(ctx, getTotalByOrderCode, code)
-	var total_value string
+func (q *Queries) GetTotalByOrderCode(ctx context.Context, code int32) (pgtype.Numeric, error) {
+	row := q.db.QueryRow(ctx, getTotalByOrderCode, code)
+	var total_value pgtype.Numeric
 	err := row.Scan(&total_value)
 	return total_value, err
 }
