@@ -2,8 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,6 +11,7 @@ import (
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/adapters/outbound/database/sqlc"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/application/services"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/config"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/logger"
 )
 
 func main() {
@@ -20,52 +20,62 @@ func main() {
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		slog.Error("Failed to load configuration", "error", err)
+		os.Exit(1)
 	}
 
-	fmt.Printf("Starting Consumer Microservice\n")
-	fmt.Printf("Environment: %s\n", cfg.App.Env)
-	fmt.Printf("RabbitMQ Host: %s\n", cfg.RabbitMQ.Host)
-	fmt.Printf("RabbitMQ Queue: %s\n", cfg.RabbitMQ.Queue)
-	fmt.Printf("Database: %s\n", cfg.Database.DBName)
+	// Initialize structured JSON logger
+	logger.Init(cfg.App.Env)
+
+	logger.Info("Starting Consumer Microservice",
+		"environment", cfg.App.Env,
+		"rabbitmq_host", cfg.RabbitMQ.Host,
+		"rabbitmq_queue", cfg.RabbitMQ.Queue,
+		"database", cfg.Database.DBName,
+	)
 
 	// Initialize database connection
 	dbConn, err := db.NewDB(ctx, cfg.Database.DSN())
 	if err != nil {
-		log.Printf("Warning: Failed to connect to database: %v", err)
-		log.Println("Consumer will start without database connection")
-		log.Println("⚠️  Database features will not work. Start PostgreSQL or check .env configuration.")
+		logger.Warn("Failed to connect to database",
+			"error", err,
+			"action", "consumer_will_start_without_db",
+		)
+		logger.Warn("Database features will not work",
+			"suggestion", "start_postgresql_or_check_env_config",
+		)
 		dbConn = nil
 	} else {
 		defer dbConn.Close()
-		fmt.Println("✓ Database connection established successfully")
+		logger.Info("Database connection established")
 	}
 
 	// Initialize SQLC queries (only if database is connected)
 	var queries database.Querier
 	if dbConn != nil {
 		queries = database.New(dbConn.Pool)
-		fmt.Println("✓ SQLC queries initialized")
+		logger.Info("SQLC queries initialized")
 	} else {
 		queries = nil
-		fmt.Println("⚠️  SQLC queries not initialized (no database)")
+		logger.Warn("SQLC queries not initialized", "reason", "no_database_connection")
 	}
 
 	// Initialize service with dependency injection
-	orderProcessingService := services.NewOrderProcessingService(queries)
-	fmt.Println("✓ OrderProcessingService initialized")
+	_ = services.NewOrderProcessingService(queries)
+	logger.Info("OrderProcessingService initialized")
 
 	// TODO: Initialize RabbitMQ connection
-	fmt.Println("⚠️  RabbitMQ connection not implemented yet")
+	logger.Warn("RabbitMQ connection not implemented yet", "status", "pending")
 
 	// Start consumer
-	fmt.Println("\n🚀 Consumer is running...")
-	fmt.Println("Waiting for messages from RabbitMQ queue:", cfg.RabbitMQ.Queue)
-	fmt.Println("Press CTRL+C to stop")
-	fmt.Println("")
+	logger.Info("Consumer is running",
+		"queue", cfg.RabbitMQ.Queue,
+		"status", "waiting_for_messages",
+	)
 
 	// TODO: Start consuming messages
 	// When message is received, call:
+	// logger.Info("Message received", "order_id", order.ID)
 	// orderProcessingService.ProcessOrder(ctx, order)
 
 	// Keep service running - wait for interrupt signal
@@ -73,9 +83,9 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	fmt.Println("\n⏹️  Shutting down consumer...")
+	logger.Info("Shutting down consumer gracefully...")
 
 	// TODO: Close RabbitMQ connection gracefully
 
-	fmt.Println("✓ Consumer stopped gracefully")
+	logger.Info("Consumer stopped gracefully")
 }
