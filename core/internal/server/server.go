@@ -2,13 +2,13 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	httphandler "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/inbound/http"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/application/services"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
 )
 
 type Server struct {
@@ -40,20 +40,27 @@ func NewServer(host, port string, queries database.Querier) *Server {
 }
 
 func (s *Server) Start() error {
-	log.Printf("Server listening on %s\n", s.server.Addr)
-	log.Println("Available endpoints:")
-	log.Println("  GET  /health")
-	log.Println("  GET  /swagger/index.html")
-	log.Println("  GET  /api/v1/orders/{code}/total")
-	log.Println("  GET  /api/v1/customers/{code}/orders")
-	log.Println("  GET  /api/v1/customers/{code}/orders/count")
-	log.Println("  POST /api/v1/orders")
-	log.Println("")
-	log.Println("✓ OrderService initialized with SQLC queries")
+	logger.Info("HTTP server starting",
+		"address", s.server.Addr,
+		"read_timeout", s.server.ReadTimeout,
+		"write_timeout", s.server.WriteTimeout,
+	)
+	
+	logger.Info("Available endpoints",
+		"health", "GET /health",
+		"swagger", "GET /swagger/index.html",
+		"order_total", "GET /api/v1/orders/{code}/total",
+		"customer_orders", "GET /api/v1/customers/{code}/orders",
+		"customer_orders_count", "GET /api/v1/customers/{code}/orders/count",
+		"create_order", "POST /api/v1/orders",
+	)
+	
+	logger.Info("OrderService initialized", "status", "ready")
 
 	return s.server.ListenAndServe()
 }
 
 func (s *Server) Shutdown() error {
+	logger.Info("Server shutdown initiated")
 	return s.server.Close()
 }

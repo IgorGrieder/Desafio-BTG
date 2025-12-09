@@ -2,8 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,6 +10,7 @@ import (
 	db "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/config"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/server"
 
 	_ "github.com/IgorGrieder/Desafio-BTG/tree/main/core/docs"
@@ -19,17 +19,8 @@ import (
 // @title BTG Pactual Order Processing API
 // @version 1.0
 // @description API for managing and querying orders
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.email support@btg.com
-
-// @license.name MIT
-// @license.url https://opensource.org/licenses/MIT
-
 // @host localhost:8080
-// @BasePath /
-// @schemes http
+// @BasePath /api/v1
 
 func main() {
 	ctx := context.Background()
@@ -37,33 +28,44 @@ func main() {
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		slog.Error("Failed to load configuration", "error", err)
+		os.Exit(1)
 	}
 
-	fmt.Printf("Starting Core API Server on %s:%s\n", cfg.Server.Host, cfg.Server.Port)
-	fmt.Printf("Environment: %s\n", cfg.App.Env)
-	fmt.Printf("Database: %s\n", cfg.Database.DBName)
+	// Initialize structured JSON logger
+	logger.Init(cfg.App.Env)
+
+	logger.Info("Starting Core API Server",
+		"host", cfg.Server.Host,
+		"port", cfg.Server.Port,
+		"environment", cfg.App.Env,
+		"database", cfg.Database.DBName,
+	)
 
 	// Initialize database connection
 	dbConn, err := db.NewDB(ctx, cfg.Database.DSN())
 	if err != nil {
-		log.Printf("Warning: Failed to connect to database: %v", err)
-		log.Println("Server will start without database connection")
-		log.Println("⚠️  Database features will not work. Start PostgreSQL or check .env configuration.")
+		logger.Warn("Failed to connect to database",
+			"error", err,
+			"action", "server_will_start_without_db",
+		)
+		logger.Warn("Database features will not work",
+			"suggestion", "start_postgresql_or_check_env_config",
+		)
 		dbConn = nil
 	} else {
 		defer dbConn.Close()
-		fmt.Println("Database connection established successfully")
+		logger.Info("Database connection established")
 	}
 
 	// Initialize SQLC queries (only if database is connected)
 	var queries database.Querier
 	if dbConn != nil {
 		queries = database.New(dbConn.Pool)
-		fmt.Println("✓ SQLC queries initialized")
+		logger.Info("SQLC queries initialized")
 	} else {
 		queries = nil
-		fmt.Println("⚠️  SQLC queries not initialized (no database)")
+		logger.Warn("SQLC queries not initialized", "reason", "no_database_connection")
 	}
 
 	// Initialize and start HTTP server with dependency injection
@@ -72,7 +74,7 @@ func main() {
 	// Start server in goroutine
 	go func() {
 		if err := srv.Start(); err != nil {
-			log.Fatalf("Server failed to start: %v", err)
+			logger.Fatal("Server failed to start", "error", err)
 		}
 	}()
 
@@ -81,11 +83,11 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	fmt.Println("\nShutting down server...")
+	logger.Info("Shutting down server gracefully...")
 
 	if err := srv.Shutdown(); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		logger.Fatal("Server forced to shutdown", "error", err)
 	}
 
-	fmt.Println("Server stopped gracefully")
+	logger.Info("Server stopped gracefully")
 }

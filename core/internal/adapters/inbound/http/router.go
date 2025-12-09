@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -36,11 +37,15 @@ func NewRouter() *http.ServeMux {
 
 func logMiddleware(next *http.ServeMux) *http.ServeMux {
 	wrapper := http.NewServeMux()
-	
+
 	wrapper.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s %s", r.Method, r.URL.Path, r.RemoteAddr)
+		logger.Debug("HTTP request",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"remote_addr", r.RemoteAddr,
+		)
 		next.ServeHTTP(w, r)
 	})
-	
+
 	return wrapper
 }
