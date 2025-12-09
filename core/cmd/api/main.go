@@ -49,13 +49,22 @@ func main() {
 	if err != nil {
 		log.Printf("Warning: Failed to connect to database: %v", err)
 		log.Println("Server will start without database connection")
+		log.Println("⚠️  Database features will not work. Start PostgreSQL or check .env configuration.")
+		dbConn = nil
 	} else {
 		defer dbConn.Close()
 		fmt.Println("Database connection established successfully")
 	}
 
-	queries := database.New(dbConn.Pool)
-	fmt.Println("✓ SQLC queries initialized")
+	// Initialize SQLC queries (only if database is connected)
+	var queries database.Querier
+	if dbConn != nil {
+		queries = database.New(dbConn.Pool)
+		fmt.Println("✓ SQLC queries initialized")
+	} else {
+		queries = nil
+		fmt.Println("⚠️  SQLC queries not initialized (no database)")
+	}
 
 	// Initialize and start HTTP server with dependency injection
 	srv := server.NewServer(cfg.Server.Host, cfg.Server.Port, queries)
