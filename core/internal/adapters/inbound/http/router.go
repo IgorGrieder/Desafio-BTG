@@ -1,7 +1,6 @@
 package http
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"

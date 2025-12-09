@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
 	"github.com/joho/godotenv"
 )
 
@@ -34,7 +35,7 @@ type AppConfig struct {
 
 func Load() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
-		fmt.Println("Warning: .env file not found, using environment variables")
+		logger.Info(". env file not found, using placeholders")
 	}
 
 	config := &Config{

@@ -57,8 +57,3 @@ func Fatal(msg string, args ...any) {
 	Logger.Error(msg, args...)
 	os.Exit(1)
 }
-
-// With returns a new logger with additional context
-func With(args ...any) *slog.Logger {
-	return Logger.With(args...)
-}
