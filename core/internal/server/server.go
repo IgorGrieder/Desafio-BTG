@@ -12,7 +12,7 @@ import (
 )
 
 type Server struct {
-	router       *http.ServeMux
+	router       http.Handler
 	server       *http.Server
 	orderService *services.OrderService
 }
@@ -45,7 +45,7 @@ func (s *Server) Start() error {
 		"read_timeout", s.server.ReadTimeout,
 		"write_timeout", s.server.WriteTimeout,
 	)
-	
+
 	logger.Info("Available endpoints",
 		"health", "GET /health",
 		"swagger", "GET /swagger/index.html",
@@ -54,7 +54,7 @@ func (s *Server) Start() error {
 		"customer_orders_count", "GET /api/v1/customers/{code}/orders/count",
 		"create_order", "POST /api/v1/orders",
 	)
-	
+
 	logger.Info("OrderService initialized", "status", "ready")
 
 	return s.server.ListenAndServe()

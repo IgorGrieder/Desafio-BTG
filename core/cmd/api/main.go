@@ -57,23 +57,25 @@ func main() {
 	logger.Info("Repository established")
 
 	// Initialize and start HTTP server with dependency injection
+	// Wait for interrupt signal to gracefully shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
 	srv := server.NewServer(cfg.Server.Host, cfg.Server.Port, queries)
 
 	// Start server in goroutine
 	go func() {
 		if err := srv.Start(); err != nil {
-			logger.Fatal("Server failed to start",
+			logger.Error("Server failed to start",
 				slog.String("error", err.Error()))
+			quit <- syscall.SIGTERM // Trigger shutdown
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	if err := srv.Shutdown(); err != nil {
-		logger.Fatal("Server forced to shutdown", "error", err)
+		logger.Error("Server forced to shutdown", slog.String("error", err.Error()))
 	}
 
 	logger.Info("Server stopped gracefully")
