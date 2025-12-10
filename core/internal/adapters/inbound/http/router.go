@@ -3,15 +3,16 @@ package http
 import (
 	"net/http"
 
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/application/services"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // NewRouter creates and configures the HTTP router with all routes and middleware
-func NewRouter() http.Handler {
+func NewRouter(orderService *services.OrderService) http.Handler {
 	mux := http.NewServeMux()
 
 	// Initialize handlers
-	orderHandler := NewOrderHandler()
+	orderHandler := NewOrderHandler(orderService)
 
 	// Health check
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {

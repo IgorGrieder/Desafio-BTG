@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -22,7 +23,7 @@ func NewServer(host, port string, queries database.Querier) *Server {
 	orderService := services.NewOrderService(queries)
 
 	// Initialize router with service
-	router := httphandler.NewRouter()
+	router := httphandler.NewRouter(orderService)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf("%s:%s", host, port),
@@ -41,21 +42,21 @@ func NewServer(host, port string, queries database.Querier) *Server {
 
 func (s *Server) Start() error {
 	logger.Info("HTTP server starting",
-		"address", s.server.Addr,
-		"read_timeout", s.server.ReadTimeout,
-		"write_timeout", s.server.WriteTimeout,
+		slog.String("address", s.server.Addr),
+		slog.Float64("read_timeout", s.server.ReadTimeout.Seconds()),
+		slog.Float64("write_timeout", s.server.WriteTimeout.Seconds()),
 	)
 
 	logger.Info("Available endpoints",
-		"health", "GET /health",
-		"swagger", "GET /swagger/index.html",
-		"order_total", "GET /api/v1/orders/{code}/total",
-		"customer_orders", "GET /api/v1/customers/{code}/orders",
-		"customer_orders_count", "GET /api/v1/customers/{code}/orders/count",
-		"create_order", "POST /api/v1/orders",
+		slog.String("health", "GET /health"),
+		slog.String("swagger", "GET /swagger/index.html"),
+		slog.String("order_total", "GET /api/v1/orders/{code}/total"),
+		slog.String("customer_orders", "GET /api/v1/customers/{code}/orders"),
+		slog.String("customer_orders_count", "GET /api/v1/customers/{code}/orders/count"),
+		slog.String("create_order", "POST /api/v1/orders"),
 	)
 
-	logger.Info("OrderService initialized", "status", "ready")
+	logger.Info("OrderService initialized", slog.String("status", "ready"))
 
 	return s.server.ListenAndServe()
 }

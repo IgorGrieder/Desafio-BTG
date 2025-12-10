@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/application/services"
 )
 
 type OrderHandler struct {
-	// TODO: Add order service dependency
+	orderService *services.OrderService
 }
 
-func NewOrderHandler() *OrderHandler {
-	return &OrderHandler{}
+func NewOrderHandler(service *services.OrderService) *OrderHandler {
+	return &OrderHandler{orderService: service}
 }
 
 // GetOrderTotal godoc
@@ -27,7 +29,7 @@ func NewOrderHandler() *OrderHandler {
 // @Router /api/v1/orders/{code}/total [get]
 func (h *OrderHandler) GetOrderTotal(w http.ResponseWriter, r *http.Request) {
 	codeStr := r.PathValue("code")
-	
+
 	code, err := strconv.Atoi(codeStr)
 	if err != nil || code < 1 {
 		RespondError(w, http.StatusBadRequest, "Invalid order code", map[string]string{
@@ -56,7 +58,7 @@ func (h *OrderHandler) GetOrderTotal(w http.ResponseWriter, r *http.Request) {
 // @Router /api/v1/customers/{code}/orders/count [get]
 func (h *OrderHandler) CountCustomerOrders(w http.ResponseWriter, r *http.Request) {
 	codeStr := r.PathValue("code")
-	
+
 	code, err := strconv.Atoi(codeStr)
 	if err != nil || code < 1 {
 		RespondError(w, http.StatusBadRequest, "Invalid customer code", map[string]string{
@@ -85,7 +87,7 @@ func (h *OrderHandler) CountCustomerOrders(w http.ResponseWriter, r *http.Reques
 // @Router /api/v1/customers/{code}/orders [get]
 func (h *OrderHandler) ListCustomerOrders(w http.ResponseWriter, r *http.Request) {
 	codeStr := r.PathValue("code")
-	
+
 	code, err := strconv.Atoi(codeStr)
 	if err != nil || code < 1 {
 		RespondError(w, http.StatusBadRequest, "Invalid customer code", map[string]string{
@@ -125,7 +127,7 @@ func (h *OrderHandler) ListCustomerOrders(w http.ResponseWriter, r *http.Request
 // @Router /api/v1/orders [post]
 func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	var req CreateOrderRequest
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		RespondError(w, http.StatusBadRequest, "Invalid request body", nil)
 		return
