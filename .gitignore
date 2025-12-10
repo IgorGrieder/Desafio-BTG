@@ -8,6 +8,8 @@
 *.so
 *.dylib
 bin
+core/cmd/api/api
+ms/cmd/consumer/consumer
 
 # Test binary, built with `go test -c`
 *.test
