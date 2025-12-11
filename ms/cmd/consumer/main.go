@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/adapters/inbound/consumer"
 	db "github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/adapters/outbound/database"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/adapters/outbound/database/sqlc"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/application/services"
@@ -61,22 +62,36 @@ func main() {
 	}
 
 	// Initialize service with dependency injection
-	_ = services.NewOrderProcessingService(queries)
+	orderService := services.NewOrderProcessingService(queries)
 	logger.Info("OrderProcessingService initialized")
 
-	// TODO: Initialize RabbitMQ connection
-	logger.Warn("RabbitMQ connection not implemented yet", "status", "pending")
-
-	// Start consumer
-	logger.Info("Consumer is running",
-		"queue", cfg.RabbitMQ.Queue,
-		"status", "waiting_for_messages",
+	// Initialize RabbitMQ consumer
+	rabbitConsumer, err := consumer.NewRabbitMQConsumer(
+		cfg.RabbitMQ.URL(),
+		cfg.RabbitMQ.Queue,
+		orderService,
 	)
+	if err != nil {
+		logger.Error("Failed to initialize RabbitMQ consumer",
+			"error", err,
+			"rabbitmq_url", cfg.RabbitMQ.Host,
+			"queue", cfg.RabbitMQ.Queue,
+		)
+		os.Exit(1)
+	}
+	defer rabbitConsumer.Close()
+	logger.Info("RabbitMQ consumer initialized")
 
-	// TODO: Start consuming messages
-	// When message is received, call:
-	// logger.Info("Message received", "order_id", order.ID)
-	// orderProcessingService.ProcessOrder(ctx, order)
+	// Start consuming messages
+	if err := rabbitConsumer.Start(ctx); err != nil {
+		logger.Error("Failed to start consumer", "error", err)
+		os.Exit(1)
+	}
+
+	logger.Info("Consumer is running and processing messages",
+		"queue", cfg.RabbitMQ.Queue,
+		"status", "active",
+	)
 
 	// Keep service running - wait for interrupt signal
 	quit := make(chan os.Signal, 1)
@@ -84,8 +99,6 @@ func main() {
 	<-quit
 
 	logger.Info("Shutting down consumer gracefully...")
-
-	// TODO: Close RabbitMQ connection gracefully
 
 	logger.Info("Consumer stopped gracefully")
 }
