@@ -20,7 +20,7 @@ func NewOrderProcessingService(queries database.Querier) *OrderProcessingService
 }
 
 // ProcessOrder processes an order message from RabbitMQ and saves to database
-func (s *OrderProcessingService) ProcessOrder(ctx context.Context, order *domain.Order) error {
+func (s *OrderProcessingService) ProcessOrder(ctx context.Context, orderID, customerID string, amount float64) error {
 	// TODO: Implement business logic with transaction
 	// Example:
 	// 1. Validate order data
