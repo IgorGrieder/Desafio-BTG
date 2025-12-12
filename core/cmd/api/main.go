@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"go.uber.org/zap"
 
 	db "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
@@ -27,25 +28,26 @@ func main() {
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
-		logger.Error("Failed to load configuration", slog.String("error", err.Error()))
+		logger.Error("Failed to load configuration", zap.Error(err))
 		os.Exit(1)
 	}
 
 	// Initialize structured JSON logger
 	logger.Init(cfg.App.Env)
+	defer logger.Sync()
 
 	logger.Info("Starting Core API Server",
-		slog.String("host", cfg.Server.Host),
-		slog.String("port", cfg.Server.Port),
-		slog.String("environment", cfg.App.Env),
-		slog.String("database", cfg.Database.DBName),
+		zap.String("host", cfg.Server.Host),
+		zap.String("port", cfg.Server.Port),
+		zap.String("environment", cfg.App.Env),
+		zap.String("database", cfg.Database.DBName),
 	)
 
 	// Initialize database connection
 	dbConn, err := db.NewDB(ctx, cfg.Database.DSN())
 	if err != nil {
 		logger.Fatal("Failed to connect to database, shuting down application",
-			slog.String("error", err.Error()),
+			zap.Error(err),
 		)
 	}
 
@@ -67,7 +69,7 @@ func main() {
 	go func() {
 		if err := srv.Start(); err != nil {
 			logger.Error("Server failed to start",
-				slog.String("error", err.Error()))
+				zap.Error(err))
 			quit <- syscall.SIGTERM // Trigger shutdown
 		}
 	}()
@@ -75,7 +77,7 @@ func main() {
 	<-quit
 
 	if err := srv.Shutdown(); err != nil {
-		logger.Error("Server forced to shutdown", slog.String("error", err.Error()))
+		logger.Error("Server forced to shutdown", zap.Error(err))
 	}
 
 	logger.Info("Server stopped gracefully")

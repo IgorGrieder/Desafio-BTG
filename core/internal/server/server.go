@@ -2,9 +2,10 @@ package server
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 	"time"
+
+	"go.uber.org/zap"
 
 	httphandler "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/inbound/http"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
@@ -42,21 +43,21 @@ func NewServer(host, port string, queries database.Querier) *Server {
 
 func (s *Server) Start() error {
 	logger.Info("HTTP server starting",
-		slog.String("address", s.server.Addr),
-		slog.Float64("read_timeout", s.server.ReadTimeout.Seconds()),
-		slog.Float64("write_timeout", s.server.WriteTimeout.Seconds()),
+		zap.String("address", s.server.Addr),
+		zap.Float64("read_timeout", s.server.ReadTimeout.Seconds()),
+		zap.Float64("write_timeout", s.server.WriteTimeout.Seconds()),
 	)
 
 	logger.Info("Available endpoints",
-		slog.String("health", "GET /health"),
-		slog.String("swagger", "GET /swagger/index.html"),
-		slog.String("order_total", "GET /api/v1/orders/{code}/total"),
-		slog.String("customer_orders", "GET /api/v1/customers/{code}/orders"),
-		slog.String("customer_orders_count", "GET /api/v1/customers/{code}/orders/count"),
-		slog.String("create_order", "POST /api/v1/orders"),
+		zap.String("health", "GET /health"),
+		zap.String("swagger", "GET /swagger/index.html"),
+		zap.String("order_total", "GET /api/v1/orders/{code}/total"),
+		zap.String("customer_orders", "GET /api/v1/customers/{code}/orders"),
+		zap.String("customer_orders_count", "GET /api/v1/customers/{code}/orders/count"),
+		zap.String("create_order", "POST /api/v1/orders"),
 	)
 
-	logger.Info("OrderService initialized", slog.String("status", "ready"))
+	logger.Info("OrderService initialized", zap.String("status", "ready"))
 
 	return s.server.ListenAndServe()
 }

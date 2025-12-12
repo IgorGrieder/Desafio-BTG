@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
 )
 
@@ -25,18 +27,18 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		start := time.Now()
 
 		logger.Debug("HTTP request started",
-			"method", r.Method,
-			"path", r.URL.Path,
-			"remote_addr", r.RemoteAddr,
+			zap.String("method", r.Method),
+			zap.String("path", r.URL.Path),
+			zap.String("remote_addr", r.RemoteAddr),
 		)
 
 		// Call the next handler
 		next.ServeHTTP(w, r)
 
 		logger.Debug("HTTP request completed",
-			"method", r.Method,
-			"path", r.URL.Path,
-			"duration_ms", time.Since(start).Milliseconds(),
+			zap.String("method", r.Method),
+			zap.String("path", r.URL.Path),
+			zap.Int64("duration_ms", time.Since(start).Milliseconds()),
 		)
 	})
 }

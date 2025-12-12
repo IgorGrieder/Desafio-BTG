@@ -1,59 +1,62 @@
 package logger
 
 import (
-	"log/slog"
-	"os"
+	"go.uber.org/zap"
 )
 
-var Logger *slog.Logger
+var Logger *zap.Logger
 
-// Init initializes the global structured logger with JSON output
+// Init initializes the global structured logger with JSON output using Zap
 func Init(env string) {
-	var level slog.Level
+	var config zap.Config
 
 	switch env {
 	case "production", "prod":
-		level = slog.LevelInfo
+		config = zap.NewProductionConfig()
 	case "development", "dev":
-		level = slog.LevelDebug
+		config = zap.NewDevelopmentConfig()
+		config.Encoding = "json"
 	default:
-		level = slog.LevelInfo
+		config = zap.NewProductionConfig()
 	}
 
-	opts := &slog.HandlerOptions{
-		Level:     level,
-		AddSource: true, // Add source file and line number
+	// Enable caller (file and line number)
+	config.DisableCaller = false
+	config.DisableStacktrace = false
+
+	var err error
+	Logger, err = config.Build()
+	if err != nil {
+		panic("Failed to initialize zap logger: " + err.Error())
 	}
-
-	handler := slog.NewJSONHandler(os.Stdout, opts)
-	Logger = slog.New(handler)
-
-	// Set as default logger
-	slog.SetDefault(Logger)
 }
 
 // Info logs an info level message
-func Info(msg string, args ...any) {
-	Logger.Info(msg, args...)
+func Info(msg string, fields ...zap.Field) {
+	Logger.Info(msg, fields...)
 }
 
 // Debug logs a debug level message
-func Debug(msg string, args ...any) {
-	Logger.Debug(msg, args...)
+func Debug(msg string, fields ...zap.Field) {
+	Logger.Debug(msg, fields...)
 }
 
 // Warn logs a warning level message
-func Warn(msg string, args ...any) {
-	Logger.Warn(msg, args...)
+func Warn(msg string, fields ...zap.Field) {
+	Logger.Warn(msg, fields...)
 }
 
 // Error logs an error level message
-func Error(msg string, args ...any) {
-	Logger.Error(msg, args...)
+func Error(msg string, fields ...zap.Field) {
+	Logger.Error(msg, fields...)
 }
 
 // Fatal logs an error and exits
-func Fatal(msg string, args ...any) {
-	Logger.Error(msg, args...)
-	os.Exit(1)
+func Fatal(msg string, fields ...zap.Field) {
+	Logger.Fatal(msg, fields...)
+}
+
+// Sync flushes any buffered log entries
+func Sync() {
+	_ = Logger.Sync()
 }
