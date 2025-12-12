@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"go.uber.org/zap"
 
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/adapters/inbound/consumer"
 	db "github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/adapters/outbound/database"
@@ -21,29 +22,30 @@ func main() {
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
-		slog.Error("Failed to load configuration", "error", err)
+		logger.Error("Failed to load configuration", zap.Error(err))
 		os.Exit(1)
 	}
 
 	// Initialize structured JSON logger
 	logger.Init(cfg.App.Env)
+	defer logger.Sync()
 
 	logger.Info("Starting Consumer Microservice",
-		"environment", cfg.App.Env,
-		"rabbitmq_host", cfg.RabbitMQ.Host,
-		"rabbitmq_queue", cfg.RabbitMQ.Queue,
-		"database", cfg.Database.DBName,
+		zap.String("environment", cfg.App.Env),
+		zap.String("rabbitmq_host", cfg.RabbitMQ.Host),
+		zap.String("rabbitmq_queue", cfg.RabbitMQ.Queue),
+		zap.String("database", cfg.Database.DBName),
 	)
 
 	// Initialize database connection
 	dbConn, err := db.NewDB(ctx, cfg.Database.DSN())
 	if err != nil {
 		logger.Warn("Failed to connect to database",
-			"error", err,
-			"action", "consumer_will_start_without_db",
+			zap.Error(err),
+			zap.String("action", "consumer_will_start_without_db"),
 		)
 		logger.Warn("Database features will not work",
-			"suggestion", "start_postgresql_or_check_env_config",
+			zap.String("suggestion", "start_postgresql_or_check_env_config"),
 		)
 		dbConn = nil
 	} else {
@@ -58,7 +60,7 @@ func main() {
 		logger.Info("SQLC queries initialized")
 	} else {
 		queries = nil
-		logger.Warn("SQLC queries not initialized", "reason", "no_database_connection")
+		logger.Warn("SQLC queries not initialized", zap.String("reason", "no_database_connection"))
 	}
 
 	// Initialize service with dependency injection
@@ -73,9 +75,9 @@ func main() {
 	)
 	if err != nil {
 		logger.Error("Failed to initialize RabbitMQ consumer",
-			"error", err,
-			"rabbitmq_url", cfg.RabbitMQ.Host,
-			"queue", cfg.RabbitMQ.Queue,
+			zap.Error(err),
+			zap.String("rabbitmq_url", cfg.RabbitMQ.Host),
+			zap.String("queue", cfg.RabbitMQ.Queue),
 		)
 		os.Exit(1)
 	}
@@ -84,13 +86,13 @@ func main() {
 
 	// Start consuming messages
 	if err := rabbitConsumer.Start(ctx); err != nil {
-		logger.Error("Failed to start consumer", "error", err)
+		logger.Error("Failed to start consumer", zap.Error(err))
 		os.Exit(1)
 	}
 
 	logger.Info("Consumer is running and processing messages",
-		"queue", cfg.RabbitMQ.Queue,
-		"status", "active",
+		zap.String("queue", cfg.RabbitMQ.Queue),
+		zap.String("status", "active"),
 	)
 
 	// Keep service running - wait for interrupt signal

@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/application/services"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/logger"
@@ -88,15 +89,15 @@ func (c *RabbitMQConsumer) Start(ctx context.Context) error {
 	}
 
 	logger.Info("Consumer started successfully",
-		"queue", c.queue,
-		"status", "waiting_for_messages",
+		zap.String("queue", c.queue),
+		zap.String("status", "waiting_for_messages"),
 	)
 
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				logger.Info("Consumer context cancelled", "reason", "shutdown")
+				logger.Info("Consumer context cancelled", zap.String("reason", "shutdown"))
 				return
 			case msg, ok := <-msgs:
 				if !ok {
@@ -116,40 +117,40 @@ func (c *RabbitMQConsumer) processMessage(ctx context.Context, msg amqp.Delivery
 	startTime := time.Now()
 
 	logger.Info("Message received",
-		"delivery_tag", msg.DeliveryTag,
-		"size_bytes", len(msg.Body),
+		zap.Uint64("delivery_tag", msg.DeliveryTag),
+		zap.Int("size_bytes", len(msg.Body)),
 	)
 
 	var orderMsg OrderMessage
 	if err := json.Unmarshal(msg.Body, &orderMsg); err != nil {
 		logger.Error("Failed to unmarshal message",
-			"error", err,
-			"body", string(msg.Body),
+			zap.Error(err),
+			zap.String("body", string(msg.Body)),
 		)
 		// Reject message without requeue
 		if nackErr := msg.Nack(false, false); nackErr != nil {
-			logger.Error("Failed to nack message", "error", nackErr)
+			logger.Error("Failed to nack message", zap.Error(nackErr))
 		}
 		return
 	}
 
 	logger.Info("Processing order",
-		"order_id", orderMsg.OrderID,
-		"customer_id", orderMsg.CustomerID,
-		"amount", orderMsg.Amount,
-		"status", orderMsg.Status,
+		zap.String("order_id", orderMsg.OrderID),
+		zap.String("customer_id", orderMsg.CustomerID),
+		zap.Float64("amount", orderMsg.Amount),
+		zap.String("status", orderMsg.Status),
 	)
 
 	// Process the order using the service
 	if err := c.service.ProcessOrder(ctx, orderMsg.OrderID, orderMsg.CustomerID, orderMsg.Amount); err != nil {
 		logger.Error("Failed to process order",
-			"error", err,
-			"order_id", orderMsg.OrderID,
-			"duration_ms", time.Since(startTime).Milliseconds(),
+			zap.Error(err),
+			zap.String("order_id", orderMsg.OrderID),
+			zap.Int64("duration_ms", time.Since(startTime).Milliseconds()),
 		)
 		// Reject and requeue the message for retry
 		if nackErr := msg.Nack(false, true); nackErr != nil {
-			logger.Error("Failed to nack message for requeue", "error", nackErr)
+			logger.Error("Failed to nack message for requeue", zap.Error(nackErr))
 		}
 		return
 	}
@@ -157,16 +158,16 @@ func (c *RabbitMQConsumer) processMessage(ctx context.Context, msg amqp.Delivery
 	// Acknowledge the message
 	if err := msg.Ack(false); err != nil {
 		logger.Error("Failed to ack message",
-			"error", err,
-			"order_id", orderMsg.OrderID,
+			zap.Error(err),
+			zap.String("order_id", orderMsg.OrderID),
 		)
 		return
 	}
 
 	logger.Info("Order processed successfully",
-		"order_id", orderMsg.OrderID,
-		"duration_ms", time.Since(startTime).Milliseconds(),
-		slog.String("status", "acknowledged"),
+		zap.String("order_id", orderMsg.OrderID),
+		zap.Int64("duration_ms", time.Since(startTime).Milliseconds()),
+		zap.String("status", "acknowledged"),
 	)
 }
 
@@ -175,13 +176,13 @@ func (c *RabbitMQConsumer) Close() error {
 
 	if c.channel != nil {
 		if err := c.channel.Close(); err != nil {
-			logger.Error("Failed to close channel", "error", err)
+			logger.Error("Failed to close channel", zap.Error(err))
 		}
 	}
 
 	if c.conn != nil {
 		if err := c.conn.Close(); err != nil {
-			logger.Error("Failed to close connection", "error", err)
+			logger.Error("Failed to close connection", zap.Error(err))
 			return err
 		}
 	}
