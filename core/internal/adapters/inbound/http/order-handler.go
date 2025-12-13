@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/application/services"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/ports"
 )
 
 type OrderHandler struct {
-	orderService *services.OrderService
+	orderService ports.OrderService
 }
 
-func NewOrderHandler(service *services.OrderService) *OrderHandler {
+func NewOrderHandler(service ports.OrderService) *OrderHandler {
 	return &OrderHandler{orderService: service}
 }
 
