@@ -145,7 +145,7 @@ go run main.go
   - AMQP: `localhost:5672`
   - Management UI: `http://localhost:15672` (guest/guest)
 
-## API Endpoints (To be implemented)
+## API Endpoints
 
 - `GET /orders/:code/total` - Get total value of an order
 - `GET /customers/:code/orders/count` - Get number of orders by customer
