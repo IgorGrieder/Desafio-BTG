@@ -22,8 +22,7 @@ type Server struct {
 
 func NewServer(host, port string, queries database.Querier, messagePublisher ports.MessagePublisher) *Server {
 	// Initialize service with dependency injection
-	// We need to provide the message publisher and the querier
-	orderService := services.NewOrderService(queries)
+	orderService := services.NewOrderService(queries, messagePublisher)
 
 	// Initialize router with service
 	router := httphandler.NewRouter(orderService)

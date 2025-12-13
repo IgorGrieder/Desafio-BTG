@@ -10,13 +10,15 @@ import (
 
 // OrderService handles business logic for orders
 type OrderService struct {
-	queries database.Querier
+	queries          database.Querier
+	messagePublisher ports.MessagePublisher
 }
 
 // NewOrderService creates a new OrderService with dependency injection
-func NewOrderService(queries database.Querier) ports.OrderService {
+func NewOrderService(queries database.Querier, messagePublisher ports.MessagePublisher) ports.OrderService {
 	return &OrderService{
-		queries: queries,
+		queries:          queries,
+		messagePublisher: messagePublisher,
 	}
 }
 

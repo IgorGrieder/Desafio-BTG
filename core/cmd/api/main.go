@@ -10,6 +10,7 @@ import (
 
 	db "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/messaging"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/config"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/server"
@@ -58,12 +59,27 @@ func main() {
 
 	logger.Info("Repository established")
 
+	// Initialize RabbitMQ publisher
+	publisher, err := messaging.NewRabbitMQPublisher(
+		cfg.RabbitMQ.URL(),
+		cfg.RabbitMQ.Exchange,
+		cfg.RabbitMQ.Queue,
+	)
+	if err != nil {
+		logger.Fatal("Failed to initialize RabbitMQ publisher",
+			zap.Error(err),
+		)
+	}
+	defer publisher.Close()
+
+	logger.Info("RabbitMQ publisher initialized")
+
 	// Initialize and start HTTP server with dependency injection
 	// Wait for interrupt signal to gracefully shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	srv := server.NewServer(cfg.Server.Host, cfg.Server.Port, queries)
+	srv := server.NewServer(cfg.Server.Host, cfg.Server.Port, queries, publisher)
 
 	// Start server in goroutine
 	go func() {
