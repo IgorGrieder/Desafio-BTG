@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -26,25 +25,7 @@ func ValidateStruct(s any) error {
 	return validate.Struct(s)
 }
 
-func RespondJSON(w http.ResponseWriter, statusCode int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-
-	response := SuccessResponse{Data: data}
-	json.NewEncoder(w).Encode(response)
-}
-
-func RespondError(w http.ResponseWriter, statusCode int, message string, details map[string]string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-
-	response := ErrorResponse{
-		Error:   message,
-		Details: details,
-	}
-	json.NewEncoder(w).Encode(response)
-}
-
+// Function to responde based on the errors
 func RespondValidationError(w http.ResponseWriter, err error) {
 	if validationErrs, ok := err.(validator.ValidationErrors); ok {
 		details := make(map[string]string)

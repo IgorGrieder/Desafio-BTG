@@ -117,7 +117,7 @@ func (h *OrderHandler) ListCustomerOrders(w http.ResponseWriter, r *http.Request
 
 // CreateOrder godoc
 // @Summary Create a new order
-// @Description Create a new order with items (for testing purposes)
+// @Description Create a new order with items
 // @Tags orders
 // @Accept json
 // @Produce json
