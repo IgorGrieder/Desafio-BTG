@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/ports"
 )
 
 type RabbitMQPublisher struct {
@@ -27,7 +28,7 @@ type OrderMessage struct {
 	Timestamp  string  `json:"timestamp"`
 }
 
-func NewRabbitMQPublisher(url, exchange, queue string) (*RabbitMQPublisher, error) {
+func NewRabbitMQPublisher(url, exchange, queue string) (ports.MessagePublisher, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
