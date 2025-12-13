@@ -5,6 +5,7 @@ import (
 
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/domain"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/ports"
 )
 
 // OrderService handles business logic for orders
@@ -13,7 +14,7 @@ type OrderService struct {
 }
 
 // NewOrderService creates a new OrderService with dependency injection
-func NewOrderService(queries database.Querier) *OrderService {
+func NewOrderService(queries database.Querier) ports.OrderService {
 	return &OrderService{
 		queries: queries,
 	}

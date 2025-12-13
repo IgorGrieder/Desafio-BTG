@@ -11,12 +11,13 @@ import (
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/application/services"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/ports"
 )
 
 type Server struct {
 	router       http.Handler
 	server       *http.Server
-	orderService *services.OrderService
+	orderService ports.OrderService
 }
 
 func NewServer(host, port string, queries database.Querier) *Server {
