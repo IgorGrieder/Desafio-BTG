@@ -20,8 +20,9 @@ type Server struct {
 	orderService ports.OrderService
 }
 
-func NewServer(host, port string, queries database.Querier) *Server {
+func NewServer(host, port string, queries database.Querier, messagePublisher ports.MessagePublisher) *Server {
 	// Initialize service with dependency injection
+	// We need to provide the message publisher and the querier
 	orderService := services.NewOrderService(queries)
 
 	// Initialize router with service
