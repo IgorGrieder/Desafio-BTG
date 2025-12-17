@@ -21,6 +21,7 @@ func init() {
 	validate = validator.New()
 }
 
+// Generic method to invoke struct validation based on parameters
 func ValidateStruct(s any) error {
 	return validate.Struct(s)
 }
