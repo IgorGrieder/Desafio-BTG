@@ -115,6 +115,18 @@ func (h *OrderHandler) ListCustomerOrders(w http.ResponseWriter, r *http.Request
 	})
 }
 
+type CreateOrderRequest struct {
+	Code         int                      `json:"codigoPedido" validate:"required,gt=0" example:"1001"`
+	CustomerCode int                      `json:"codigoCliente" validate:"required,gt=0" example:"1"`
+	Items        []CreateOrderItemRequest `json:"itens" validate:"required,min=1,dive"`
+}
+
+type CreateOrderItemRequest struct {
+	Product  string  `json:"produto" validate:"required,min=1" example:"lápis"`
+	Quantity int     `json:"quantidade" validate:"required,gt=0" example:"100"`
+	Price    float64 `json:"preco" validate:"required,gt=0" example:"1.10"`
+}
+
 // CreateOrder godoc
 // @Summary Create a new order
 // @Description Create a new order with items
@@ -144,16 +156,4 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		"customer_code": req.CustomerCode,
 		"message":       "Order created successfully",
 	})
-}
-
-type CreateOrderRequest struct {
-	Code         int                      `json:"codigoPedido" validate:"required,gt=0" example:"1001"`
-	CustomerCode int                      `json:"codigoCliente" validate:"required,gt=0" example:"1"`
-	Items        []CreateOrderItemRequest `json:"itens" validate:"required,min=1,dive"`
-}
-
-type CreateOrderItemRequest struct {
-	Product  string  `json:"produto" validate:"required,min=1" example:"lápis"`
-	Quantity int     `json:"quantidade" validate:"required,gt=0" example:"100"`
-	Price    float64 `json:"preco" validate:"required,gt=0" example:"1.10"`
 }
