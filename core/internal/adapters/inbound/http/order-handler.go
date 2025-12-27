@@ -152,6 +152,7 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Call service to create order
+	// TODO: Call service to create order
 	RespondJSON(w, http.StatusCreated, map[string]any{
 		"order_code":    req.Code,
 		"customer_code": req.CustomerCode,
