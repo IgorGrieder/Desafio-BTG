@@ -143,6 +143,7 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		RespondError(w, http.StatusBadRequest, "Invalid request body", nil)
 		return
+
 	}
 
 	if err := ValidateStruct(req); err != nil {
