@@ -57,6 +57,8 @@ func main() {
 	// Initialize SQLC queries
 	queries := database.New(dbConn.Pool)
 
+	dbStore := db.NewStore(dbConn, queries)
+
 	logger.Info("Repository established")
 
 	// Initialize RabbitMQ publisher
@@ -79,7 +81,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	srv := server.NewServer(cfg.Server.Host, cfg.Server.Port, queries, publisher)
+	srv := server.NewServer(cfg.Server.Host, cfg.Server.Port, dbStore, publisher)
 
 	// Start server in goroutine
 	go func() {

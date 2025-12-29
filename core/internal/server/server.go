@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	httphandler "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/inbound/http"
-	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
+	db "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/application/services"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/ports"
@@ -20,9 +20,9 @@ type Server struct {
 	orderService ports.OrderService
 }
 
-func NewServer(host, port string, queries database.Querier, messagePublisher ports.MessagePublisher) *Server {
+func NewServer(host, port string, dbStore *db.Store, messagePublisher ports.MessagePublisher) *Server {
 	// Initialize service with dependency injection
-	orderService := services.NewOrderService(queries, messagePublisher)
+	orderService := services.NewOrderService(dbStore, messagePublisher)
 
 	// Initialize router with service
 	router := httphandler.NewRouter(orderService)

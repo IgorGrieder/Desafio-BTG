@@ -3,19 +3,27 @@ package services
 import (
 	"context"
 
+	db "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/domain"
+	"github.com/jackc/pgx/v5"
+
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/ports"
 )
 
+// Handles DB conns and queries
+type OrderServiceQuerier struct {
+	*database.Queries
+}
+
 // OrderService handles business logic for orders
 type OrderService struct {
-	queries          database.Querier
+	queries          *db.Store
 	messagePublisher ports.MessagePublisher
 }
 
 // NewOrderService creates a new OrderService with dependency injection
-func NewOrderService(queries database.Querier, messagePublisher ports.MessagePublisher) ports.OrderService {
+func NewOrderService(queries *db.Store, messagePublisher ports.MessagePublisher) ports.OrderService {
 	return &OrderService{
 		queries:          queries,
 		messagePublisher: messagePublisher,
@@ -31,6 +39,11 @@ func (s *OrderService) GetOrderTotal(ctx context.Context, orderCode int32) (stri
 	//     return "", err
 	// }
 	// return total, nil
+	tx, err := s.queries.Pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return "", err
+	}
+	s.queries.WithTx(tx)
 	return "", nil
 }
 
@@ -78,7 +91,8 @@ func (s *OrderService) CreateOrder(ctx context.Context, order *domain.Order) err
 	// 2. Create order: s.queries.CreateOrder(ctx, params)
 	// 3. Create order items: for each item, s.queries.CreateOrderItem(ctx, params)
 	// 4. Commit transaction
-	s.queries.CreateOrder()
+	s.queries.
+		s.queries.CreateOrder(ctx)
 	return nil
 }
 
