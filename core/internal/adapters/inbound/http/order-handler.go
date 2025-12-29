@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/domain"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/ports"
 )
 
@@ -116,7 +118,7 @@ func (h *OrderHandler) ListCustomerOrders(w http.ResponseWriter, r *http.Request
 }
 
 type CreateOrderRequest struct {
-	Code         int                      `json:"codigoPedido" validate:"required,gt=0" example:"1001"`
+	Code         int64                    `json:"codigoPedido" validate:"required,gt=0" example:"1001"`
 	CustomerCode int                      `json:"codigoCliente" validate:"required,gt=0" example:"1"`
 	Items        []CreateOrderItemRequest `json:"itens" validate:"required,min=1,dive"`
 }
@@ -125,6 +127,26 @@ type CreateOrderItemRequest struct {
 	Product  string  `json:"produto" validate:"required,min=1" example:"lápis"`
 	Quantity int     `json:"quantidade" validate:"required,gt=0" example:"100"`
 	Price    float64 `json:"preco" validate:"required,gt=0" example:"1.10"`
+}
+
+func (r *CreateOrderRequest) ToDomain() *domain.Order {
+	orderItems := make([]domain.OrderItem, len(r.Items))
+
+	for _, item := range r.Items {
+		newItem := domain.OrderItem{
+			Product:  item.Product,
+			Quantity: item.Quantity,
+			Price:    item.Price,
+		}
+		orderItems = append(orderItems, newItem)
+	}
+
+	return &domain.Order{
+		CustomerCode: r.CustomerCode,
+		OrderCode:    r.Code,
+		Items:        orderItems,
+		CreatedAt:    time.Now().UTC(),
+	}
 }
 
 // CreateOrder godoc
@@ -150,6 +172,8 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		RespondValidationError(w, err)
 		return
 	}
+
+	err := h.orderService.CreateOrder(r.Context(), req.ToDomain())
 
 	// TODO: Call service to create order
 	RespondJSON(w, http.StatusCreated, map[string]any{

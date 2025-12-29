@@ -1,20 +1,17 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 type Order struct {
-	ID             int64
-	Code           int
-	CustomerCode   int
-	Items          []OrderItem
-	TotalValue     float64
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	CustomerCode int
+	OrderCode    int64
+	Items        []OrderItem
+	CreatedAt    time.Time
 }
 
 type OrderItem struct {
-	ID       int64
-	OrderID  int64
 	Product  string
 	Quantity int
 	Price    float64
