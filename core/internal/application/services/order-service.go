@@ -78,6 +78,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, order *domain.Order) err
 	// 2. Create order: s.queries.CreateOrder(ctx, params)
 	// 3. Create order items: for each item, s.queries.CreateOrderItem(ctx, params)
 	// 4. Commit transaction
+	s.queries.CreateOrder()
 	return nil
 }
 

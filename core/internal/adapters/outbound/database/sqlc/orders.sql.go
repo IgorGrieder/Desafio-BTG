@@ -24,27 +24,24 @@ func (q *Queries) CountOrdersByCustomer(ctx context.Context, customerCode int32)
 }
 
 const createOrder = `-- name: CreateOrder :one
-INSERT INTO orders (code, customer_code, total_value, created_at, updated_at)
-VALUES ($1, $2, $3, NOW(), NOW())
-RETURNING id, code, customer_code, total_value, created_at, updated_at
+INSERT INTO orders (code, customer_code, created_at)
+VALUES ($1, $2, NOW())
+RETURNING id, code, customer_code, created_at
 `
 
 type CreateOrderParams struct {
-	Code         int32          `json:"code"`
-	CustomerCode int32          `json:"customer_code"`
-	TotalValue   pgtype.Numeric `json:"total_value"`
+	Code         int32 `json:"code"`
+	CustomerCode int32 `json:"customer_code"`
 }
 
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error) {
-	row := q.db.QueryRow(ctx, createOrder, arg.Code, arg.CustomerCode, arg.TotalValue)
+	row := q.db.QueryRow(ctx, createOrder, arg.Code, arg.CustomerCode)
 	var i Order
 	err := row.Scan(
 		&i.ID,
 		&i.Code,
 		&i.CustomerCode,
-		&i.TotalValue,
 		&i.CreatedAt,
-		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -82,7 +79,7 @@ func (q *Queries) CreateOrderItem(ctx context.Context, arg CreateOrderItemParams
 }
 
 const getOrderByCode = `-- name: GetOrderByCode :one
-SELECT id, code, customer_code, total_value, created_at, updated_at FROM orders
+SELECT id, code, customer_code, created_at FROM orders
 WHERE code = $1
 `
 
@@ -93,15 +90,13 @@ func (q *Queries) GetOrderByCode(ctx context.Context, code int32) (Order, error)
 		&i.ID,
 		&i.Code,
 		&i.CustomerCode,
-		&i.TotalValue,
 		&i.CreatedAt,
-		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getOrderByID = `-- name: GetOrderByID :one
-SELECT id, code, customer_code, total_value, created_at, updated_at FROM orders
+SELECT id, code, customer_code, created_at FROM orders
 WHERE id = $1
 `
 
@@ -112,9 +107,7 @@ func (q *Queries) GetOrderByID(ctx context.Context, id int64) (Order, error) {
 		&i.ID,
 		&i.Code,
 		&i.CustomerCode,
-		&i.TotalValue,
 		&i.CreatedAt,
-		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -152,7 +145,7 @@ func (q *Queries) GetOrderItems(ctx context.Context, orderID int64) ([]OrderItem
 }
 
 const getOrdersByCustomerCode = `-- name: GetOrdersByCustomerCode :many
-SELECT id, code, customer_code, total_value, created_at, updated_at FROM orders
+SELECT id, code, customer_code, created_at FROM orders
 WHERE customer_code = $1
 ORDER BY created_at DESC
 `
@@ -170,9 +163,7 @@ func (q *Queries) GetOrdersByCustomerCode(ctx context.Context, customerCode int3
 			&i.ID,
 			&i.Code,
 			&i.CustomerCode,
-			&i.TotalValue,
 			&i.CreatedAt,
-			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -182,16 +173,4 @@ func (q *Queries) GetOrdersByCustomerCode(ctx context.Context, customerCode int3
 		return nil, err
 	}
 	return items, nil
-}
-
-const getTotalByOrderCode = `-- name: GetTotalByOrderCode :one
-SELECT total_value FROM orders
-WHERE code = $1
-`
-
-func (q *Queries) GetTotalByOrderCode(ctx context.Context, code int32) (pgtype.Numeric, error) {
-	row := q.db.QueryRow(ctx, getTotalByOrderCode, code)
-	var total_value pgtype.Numeric
-	err := row.Scan(&total_value)
-	return total_value, err
 }

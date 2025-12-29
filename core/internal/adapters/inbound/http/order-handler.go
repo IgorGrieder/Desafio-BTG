@@ -138,6 +138,7 @@ func (r *CreateOrderRequest) ToDomain() *domain.Order {
 			Quantity: item.Quantity,
 			Price:    item.Price,
 		}
+
 		orderItems = append(orderItems, newItem)
 	}
 
