@@ -5,16 +5,16 @@ import (
 )
 
 type Order struct {
-	CustomerCode int
-	OrderCode    int64
-	Items        []OrderItem
-	CreatedAt    time.Time
+	CustomerCode int         `json:"customerCode"`
+	OrderCode    int64       `json:"orderCode"`
+	Items        []OrderItem `json:"items"`
+	CreatedAt    time.Time   `json:"createdAt"`
 }
 
 type OrderItem struct {
-	Product  string
-	Quantity int
-	Price    float64
+	Product  string  `json:"product"`
+	Quantity int     `json:"quantity"`
+	Price    float64 `json:"price"`
 }
 
 func (o *Order) CalculateTotal() float64 {
