@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/application/services"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/domain"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/logger"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -121,12 +122,13 @@ func (c *RabbitMQConsumer) processMessage(ctx context.Context, msg amqp.Delivery
 		zap.Int("size_bytes", len(msg.Body)),
 	)
 
-	var orderMsg OrderMessage
+	var orderMsg *domain.Order
 	if err := json.Unmarshal(msg.Body, &orderMsg); err != nil {
 		logger.Error("Failed to unmarshal message",
 			zap.Error(err),
 			zap.String("body", string(msg.Body)),
 		)
+
 		// Reject message without requeue
 		if nackErr := msg.Nack(false, false); nackErr != nil {
 			logger.Error("Failed to nack message", zap.Error(nackErr))
@@ -135,19 +137,20 @@ func (c *RabbitMQConsumer) processMessage(ctx context.Context, msg amqp.Delivery
 	}
 
 	logger.Info("Processing order",
-		zap.String("order_id", orderMsg.OrderID),
-		zap.String("customer_id", orderMsg.CustomerID),
-		zap.Float64("amount", orderMsg.Amount),
-		zap.String("status", orderMsg.Status),
+		zap.Int64("order code", orderMsg.OrderCode),
+		zap.Int("customer code", orderMsg.CustomerCode),
+		zap.String("items: ", fmt.Sprintf("%v", orderMsg.Items)),
+		zap.String("created at", orderMsg.CreatedAt.String()),
 	)
 
 	// Process the order using the service
-	if err := c.service.ProcessOrder(ctx, orderMsg.OrderID, orderMsg.CustomerID, orderMsg.Amount); err != nil {
+	if err := c.service.ProcessOrder(ctx, orderMsg); err != nil {
 		logger.Error("Failed to process order",
 			zap.Error(err),
-			zap.String("order_id", orderMsg.OrderID),
+			zap.Int64("order code", orderMsg.OrderCode),
 			zap.Int64("duration_ms", time.Since(startTime).Milliseconds()),
 		)
+
 		// Reject and requeue the message for retry
 		if nackErr := msg.Nack(false, true); nackErr != nil {
 			logger.Error("Failed to nack message for requeue", zap.Error(nackErr))
@@ -159,13 +162,13 @@ func (c *RabbitMQConsumer) processMessage(ctx context.Context, msg amqp.Delivery
 	if err := msg.Ack(false); err != nil {
 		logger.Error("Failed to ack message",
 			zap.Error(err),
-			zap.String("order_id", orderMsg.OrderID),
+			zap.Int64("order code", orderMsg.OrderCode),
 		)
 		return
 	}
 
 	logger.Info("Order processed successfully",
-		zap.String("order_id", orderMsg.OrderID),
+		zap.Int64("order code", orderMsg.OrderCode),
 		zap.Int64("duration_ms", time.Since(startTime).Milliseconds()),
 		zap.String("status", "acknowledged"),
 	)
