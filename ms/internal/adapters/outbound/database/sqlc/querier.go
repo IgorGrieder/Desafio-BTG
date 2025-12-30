@@ -6,8 +6,6 @@ package database
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -18,7 +16,6 @@ type Querier interface {
 	GetOrderByID(ctx context.Context, id int64) (Order, error)
 	GetOrderItems(ctx context.Context, orderID int64) ([]OrderItem, error)
 	GetOrdersByCustomerCode(ctx context.Context, customerCode int32) ([]Order, error)
-	GetTotalByOrderCode(ctx context.Context, code int32) (pgtype.Numeric, error)
 }
 
 var _ Querier = (*Queries)(nil)

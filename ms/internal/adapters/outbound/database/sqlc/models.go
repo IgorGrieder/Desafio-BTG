@@ -12,9 +12,7 @@ type Order struct {
 	ID           int64            `json:"id"`
 	Code         int32            `json:"code"`
 	CustomerCode int32            `json:"customer_code"`
-	TotalValue   pgtype.Numeric   `json:"total_value"`
 	CreatedAt    pgtype.Timestamp `json:"created_at"`
-	UpdatedAt    pgtype.Timestamp `json:"updated_at"`
 }
 
 type OrderItem struct {
