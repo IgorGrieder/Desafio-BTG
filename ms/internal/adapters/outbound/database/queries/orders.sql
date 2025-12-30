@@ -1,6 +1,6 @@
 -- name: CreateOrder :one
-INSERT INTO orders (code, customer_code, total_value, created_at, updated_at)
-VALUES ($1, $2, $3, NOW(), NOW())
+INSERT INTO orders (code, customer_code, created_at)
+VALUES ($1, $2, NOW())
 RETURNING *;
 
 -- name: CreateOrderItem :one
@@ -24,10 +24,6 @@ ORDER BY created_at DESC;
 -- name: GetOrderItems :many
 SELECT * FROM order_items
 WHERE order_id = $1;
-
--- name: GetTotalByOrderCode :one
-SELECT total_value FROM orders
-WHERE code = $1;
 
 -- name: CountOrdersByCustomer :one
 SELECT COUNT(*) FROM orders

@@ -4,11 +4,24 @@ import (
 	"context"
 	"fmt"
 
+	database "github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/adapters/outbound/database/sqlc"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type DB struct {
 	Pool *pgxpool.Pool
+}
+
+type Store struct {
+	*DB
+	*database.Queries
+}
+
+func NewStore(dbConn *DB, queires *database.Queries) *Store {
+	return &Store{
+		dbConn,
+		queires,
+	}
 }
 
 func NewDB(ctx context.Context, dsn string) (*DB, error) {
