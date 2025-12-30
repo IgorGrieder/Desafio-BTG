@@ -175,8 +175,14 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := h.orderService.CreateOrder(r.Context(), req.ToDomain())
+	if err != nil {
+		RespondJSON(w, http.StatusInternalServerError, map[string]any{
+			"order_code":    req.Code,
+			"customer_code": req.CustomerCode,
+			"message":       "Error while creating your order, please try again later",
+		})
+	}
 
-	// TODO: Call service to create order
 	RespondJSON(w, http.StatusCreated, map[string]any{
 		"order_code":    req.Code,
 		"customer_code": req.CustomerCode,

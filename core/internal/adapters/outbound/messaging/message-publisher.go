@@ -9,6 +9,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.uber.org/zap"
 
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/domain"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/ports"
 )
@@ -18,14 +19,6 @@ type RabbitMQPublisher struct {
 	channel  *amqp.Channel
 	exchange string
 	queue    string
-}
-
-type OrderMessage struct {
-	OrderID    string  `json:"order_id"`
-	CustomerID string  `json:"customer_id"`
-	Amount     float64 `json:"amount"`
-	Status     string  `json:"status"`
-	Timestamp  string  `json:"timestamp"`
 }
 
 func NewRabbitMQPublisher(url, exchange, queue string) (ports.MessagePublisher, error) {
@@ -98,20 +91,12 @@ func NewRabbitMQPublisher(url, exchange, queue string) (ports.MessagePublisher, 
 	}, nil
 }
 
-func (p *RabbitMQPublisher) PublishOrder(ctx context.Context, orderID, customerID string, amount float64) error {
-	msg := OrderMessage{
-		OrderID:    orderID,
-		CustomerID: customerID,
-		Amount:     amount,
-		Status:     "pending",
-		Timestamp:  time.Now().Format(time.RFC3339),
-	}
-
-	body, err := json.Marshal(msg)
+func (p *RabbitMQPublisher) PublishOrder(ctx context.Context, order *domain.Order) error {
+	body, err := json.Marshal(order)
 	if err != nil {
 		logger.Error("Failed to marshal message",
 			zap.Error(err),
-			zap.String("order_id", orderID),
+			zap.Int64("order_code", order.OrderCode),
 		)
 		return fmt.Errorf("failed to marshal message: %w", err)
 	}
@@ -133,15 +118,14 @@ func (p *RabbitMQPublisher) PublishOrder(ctx context.Context, orderID, customerI
 	if err != nil {
 		logger.Error("Failed to publish message",
 			zap.Error(err),
-			zap.String("order_id", orderID),
+			zap.Int64("order_code", order.OrderCode),
 		)
 		return fmt.Errorf("failed to publish message: %w", err)
 	}
 
 	logger.Info("Message published successfully",
-		zap.String("order_id", orderID),
-		zap.String("customer_id", customerID),
-		zap.Float64("amount", amount),
+		zap.Int64("order_code", order.OrderCode),
+		zap.Int("customer_code", order.CustomerCode),
 		zap.String("exchange", p.exchange),
 		zap.String("routing_key", p.queue),
 	)

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	db "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database"
@@ -87,51 +88,7 @@ func (s *OrderService) CountOrdersByCustomer(ctx context.Context, customerCode i
 
 // CreateOrder creates a new order with items
 func (s *OrderService) CreateOrder(ctx context.Context, order *domain.Order) error {
-	tx, err := s.queries.Pool.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return fmt.Errorf("error opening transaction %v", err)
-	}
-	defer tx.Commit(ctx)
-
-	queries := s.queries.WithTx(tx)
-
-	args := database.CreateOrderParams{
-		Code:         int32(order.OrderCode),
-		CustomerCode: int32(order.CustomerCode),
-	}
-
-	orderCreated, err := queries.CreateOrder(ctx, args)
-	if err != nil {
-		tx.Rollback(ctx)
-		return fmt.Errorf("error creating order %v", err)
-	}
-
-	orderId := int64(orderCreated.Code)
-
-	for _, item := range order.Items {
-		var p pgtype.Numeric
-
-		err := p.Scan(item.Price)
-		if err != nil {
-			tx.Rollback(ctx)
-			return err
-		}
-
-		args := database.CreateOrderItemParams{
-			OrderID:  orderId,
-			Product:  item.Product,
-			Price:    p,
-			Quantity: int32(item.Quantity),
-		}
-
-		_, err = queries.CreateOrderItem(ctx, args)
-		if err != nil {
-			tx.Rollback(ctx)
-			return fmt.Errorf("error creating order item %v : %v", item, err)
-		}
-	}
-
-	return nil
+	return s.messagePublisher.PublishOrder(ctx, order)
 }
 
 // GetOrderItems retrieves all items for an order

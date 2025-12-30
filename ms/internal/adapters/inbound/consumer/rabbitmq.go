@@ -137,17 +137,17 @@ func (c *RabbitMQConsumer) processMessage(ctx context.Context, msg amqp.Delivery
 	}
 
 	logger.Info("Processing order",
-		zap.Int64("order code", orderMsg.OrderCode),
-		zap.Int("customer code", orderMsg.CustomerCode),
+		zap.Int64("order_code", orderMsg.OrderCode),
+		zap.Int("customer_code", orderMsg.CustomerCode),
 		zap.String("items: ", fmt.Sprintf("%v", orderMsg.Items)),
-		zap.String("created at", orderMsg.CreatedAt.String()),
+		zap.String("created_at", orderMsg.CreatedAt.String()),
 	)
 
 	// Process the order using the service
 	if err := c.service.ProcessOrder(ctx, orderMsg); err != nil {
 		logger.Error("Failed to process order",
 			zap.Error(err),
-			zap.Int64("order code", orderMsg.OrderCode),
+			zap.Int64("order_code", orderMsg.OrderCode),
 			zap.Int64("duration_ms", time.Since(startTime).Milliseconds()),
 		)
 
@@ -162,13 +162,13 @@ func (c *RabbitMQConsumer) processMessage(ctx context.Context, msg amqp.Delivery
 	if err := msg.Ack(false); err != nil {
 		logger.Error("Failed to ack message",
 			zap.Error(err),
-			zap.Int64("order code", orderMsg.OrderCode),
+			zap.Int64("order_code", orderMsg.OrderCode),
 		)
 		return
 	}
 
 	logger.Info("Order processed successfully",
-		zap.Int64("order code", orderMsg.OrderCode),
+		zap.Int64("order_code", orderMsg.OrderCode),
 		zap.Int64("duration_ms", time.Since(startTime).Milliseconds()),
 		zap.String("status", "acknowledged"),
 	)
