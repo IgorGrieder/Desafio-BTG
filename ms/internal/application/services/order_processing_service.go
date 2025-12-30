@@ -3,17 +3,17 @@ package services
 import (
 	"context"
 
-	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/adapters/outbound/database/sqlc"
+	database "github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/adapters/outbound/database"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/domain"
 )
 
 // OrderProcessingService handles business logic for processing orders from RabbitMQ
 type OrderProcessingService struct {
-	queries database.Querier
+	queries *database.Store
 }
 
 // NewOrderProcessingService creates a new OrderProcessingService with dependency injection
-func NewOrderProcessingService(queries database.Querier) *OrderProcessingService {
+func NewOrderProcessingService(queries *database.Store) *OrderProcessingService {
 	return &OrderProcessingService{
 		queries: queries,
 	}

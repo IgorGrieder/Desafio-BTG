@@ -53,18 +53,14 @@ func main() {
 		logger.Info("Database connection established")
 	}
 
-	// Initialize SQLC queries (only if database is connected)
-	var queries database.Querier
-	if dbConn != nil {
-		queries = database.New(dbConn.Pool)
-		logger.Info("SQLC queries initialized")
-	} else {
-		queries = nil
-		logger.Warn("SQLC queries not initialized", zap.String("reason", "no_database_connection"))
-	}
+	// Initialize SQLC queries
+	queries := database.New(dbConn.Pool)
+
+	dbStore := db.NewStore(dbConn, queries)
 
 	// Initialize service with dependency injection
-	orderService := services.NewOrderProcessingService(queries)
+	orderService := services.NewOrderProcessingService(dbStore)
+
 	logger.Info("OrderProcessingService initialized")
 
 	// Initialize RabbitMQ consumer
