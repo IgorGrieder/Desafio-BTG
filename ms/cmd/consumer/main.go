@@ -17,7 +17,8 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// Load configuration
 	cfg, err := config.Load()
@@ -44,13 +45,8 @@ func main() {
 			zap.Error(err),
 			zap.String("action", "consumer_will_start_without_db"),
 		)
-		logger.Warn("Database features will not work",
-			zap.String("suggestion", "start_postgresql_or_check_env_config"),
-		)
-		dbConn = nil
-	} else {
-		defer dbConn.Close()
-		logger.Info("Database connection established")
+
+		os.Exit(1)
 	}
 
 	// Initialize SQLC queries

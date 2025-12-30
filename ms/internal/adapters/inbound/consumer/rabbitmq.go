@@ -21,13 +21,6 @@ type RabbitMQConsumer struct {
 	service *services.OrderProcessingService
 }
 
-type OrderMessage struct {
-	OrderID    string  `json:"order_id"`
-	CustomerID string  `json:"customer_id"`
-	Amount     float64 `json:"amount"`
-	Status     string  `json:"status"`
-}
-
 func NewRabbitMQConsumer(url, queueName string, service *services.OrderProcessingService) (*RabbitMQConsumer, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
