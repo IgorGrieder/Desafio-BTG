@@ -120,7 +120,7 @@ func (p *RabbitMQPublisher) PublishOrder(ctx context.Context, order *domain.Orde
 			zap.Error(err),
 			zap.Int64("order_code", order.OrderCode),
 		)
-		return fmt.Errorf("failed to publish message: %w", err)
+		return fmt.Errorf("failed to publish message: %v", err)
 	}
 
 	logger.Info("Message published successfully",

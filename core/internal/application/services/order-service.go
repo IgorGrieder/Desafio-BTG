@@ -2,14 +2,11 @@ package services
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	db "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/domain"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/ports"
 )
