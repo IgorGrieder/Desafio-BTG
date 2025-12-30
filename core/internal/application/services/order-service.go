@@ -91,8 +91,14 @@ func (s *OrderService) CreateOrder(ctx context.Context, order *domain.Order) err
 	// 2. Create order: s.queries.CreateOrder(ctx, params)
 	// 3. Create order items: for each item, s.queries.CreateOrderItem(ctx, params)
 	// 4. Commit transaction
-	s.queries.
-		s.queries.CreateOrder(ctx)
+	tx, err := s.queries.Pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer tx.Commit(ctx)
+
+	queires := s.queries.WithTx(tx)
+
 	return nil
 }
 
