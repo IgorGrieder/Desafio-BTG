@@ -92,6 +92,7 @@ func main() {
 		}
 	}()
 
+	// Blocks
 	<-quit
 
 	if err := srv.Shutdown(); err != nil {
