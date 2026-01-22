@@ -2,61 +2,89 @@ package logger
 
 import (
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-var Logger *zap.Logger
+// Log is the global logger instance
+var Log *zap.Logger
 
-// Init initializes the global structured logger with JSON output using Zap
-func Init(env string) {
-	var config zap.Config
-
-	switch env {
-	case "production", "prod":
-		config = zap.NewProductionConfig()
-	case "development", "dev":
-		config = zap.NewDevelopmentConfig()
-		config.Encoding = "json"
-	default:
-		config = zap.NewProductionConfig()
+// Init initializes the Zap logger with JSON output
+func Init(env string) error {
+	config := zap.Config{
+		Level:       zap.NewAtomicLevelAt(zap.InfoLevel),
+		Development: env == "development",
+		Encoding:    "json",
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "timestamp",
+			LevelKey:       "level",
+			NameKey:        "logger",
+			CallerKey:      "caller",
+			FunctionKey:    zapcore.OmitKey,
+			MessageKey:     "message",
+			StacktraceKey:  "stacktrace",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.LowercaseLevelEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeDuration: zapcore.MillisDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		},
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
 	}
-
-	// Enable caller (file and line number)
-	config.DisableCaller = false
-	config.DisableStacktrace = false
 
 	var err error
-	Logger, err = config.Build()
+	Log, err = config.Build()
 	if err != nil {
-		panic("Failed to initialize zap logger: " + err.Error())
+		return err
 	}
-}
 
-// Info logs an info level message
-func Info(msg string, fields ...zap.Field) {
-	Logger.Info(msg, fields...)
-}
-
-// Debug logs a debug level message
-func Debug(msg string, fields ...zap.Field) {
-	Logger.Debug(msg, fields...)
-}
-
-// Warn logs a warning level message
-func Warn(msg string, fields ...zap.Field) {
-	Logger.Warn(msg, fields...)
-}
-
-// Error logs an error level message
-func Error(msg string, fields ...zap.Field) {
-	Logger.Error(msg, fields...)
-}
-
-// Fatal logs an error and exits
-func Fatal(msg string, fields ...zap.Field) {
-	Logger.Fatal(msg, fields...)
+	zap.ReplaceGlobals(Log)
+	return nil
 }
 
 // Sync flushes any buffered log entries
 func Sync() {
-	_ = Logger.Sync()
+	if Log != nil {
+		_ = Log.Sync()
+	}
+}
+
+// Info logs an info message
+func Info(msg string, fields ...zap.Field) {
+	if Log == nil {
+		return
+	}
+	Log.WithOptions(zap.AddCallerSkip(1)).Info(msg, fields...)
+}
+
+// Error logs an error message
+func Error(msg string, fields ...zap.Field) {
+	if Log == nil {
+		return
+	}
+	Log.WithOptions(zap.AddCallerSkip(1)).Error(msg, fields...)
+}
+
+// Warn logs a warning message
+func Warn(msg string, fields ...zap.Field) {
+	if Log == nil {
+		return
+	}
+	Log.WithOptions(zap.AddCallerSkip(1)).Warn(msg, fields...)
+}
+
+// Debug logs a debug message
+func Debug(msg string, fields ...zap.Field) {
+	if Log == nil {
+		return
+	}
+	Log.WithOptions(zap.AddCallerSkip(1)).Debug(msg, fields...)
+}
+
+// Fatal logs a fatal message and exits
+func Fatal(msg string, fields ...zap.Field) {
+	if Log == nil {
+		return
+	}
+	Log.WithOptions(zap.AddCallerSkip(1)).Fatal(msg, fields...)
 }
