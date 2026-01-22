@@ -144,6 +144,74 @@ go run main.go
 - **RabbitMQ**:
   - AMQP: `localhost:5672`
   - Management UI: `http://localhost:15672` (guest/guest)
+- **Jaeger** (Tracing): `http://localhost:16686`
+- **Prometheus** (Metrics): `http://localhost:9090`
+- **Grafana** (Dashboards): `http://localhost:3000` (admin/admin)
+
+## Observability
+
+The project includes full observability with tracing, metrics, and logging.
+
+### OpenTelemetry Tracing
+
+Distributed tracing is enabled via OpenTelemetry with Jaeger as the backend.
+
+**Configuration:**
+```bash
+OTEL_ENABLED=true
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+```
+
+**Features:**
+- Automatic HTTP request tracing with `otelhttp`
+- Custom spans for message processing in the consumer
+- W3C TraceContext propagation for distributed tracing
+- Trace ID and Span ID included in all log messages
+
+**Access Jaeger UI:** `http://localhost:16686`
+
+### Prometheus Metrics
+
+The core API exposes Prometheus metrics for request monitoring.
+
+**Metrics exposed:**
+- `http_requests_total` - Counter of total HTTP requests (by method, path, status)
+- `http_request_duration_seconds` - Histogram of request durations (by method, path)
+
+**Metrics endpoint:** `GET /metrics`
+
+**Access Prometheus UI:** `http://localhost:9090`
+
+### Grafana Dashboards
+
+Pre-configured Grafana dashboards for API monitoring.
+
+**Access Grafana:** `http://localhost:3000` (admin/admin)
+
+**Pre-configured datasources:**
+- Prometheus (metrics)
+- Jaeger (traces)
+
+**Included dashboard:**
+- API Dashboard with request rate, p95 latency, and error rate panels
+
+### Structured Logging
+
+Both services use structured JSON logging with zap.
+
+**Log fields:**
+- `timestamp` - ISO 8601 timestamp
+- `level` - Log level (info, warn, error)
+- `message` - Log message
+- `trace_id` - OpenTelemetry trace ID
+- `span_id` - OpenTelemetry span ID
+- Additional context fields per log
+
+### Health Endpoints
+
+**Core API:**
+- `GET /health` - Health check endpoint
+- `GET /metrics` - Prometheus metrics
 
 ## API Endpoints
 
