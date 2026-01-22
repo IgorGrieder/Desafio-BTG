@@ -1,25 +1,18 @@
 package http
 
 import (
-	"encoding/json"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/pkg/httputils"
 	"net/http"
 )
 
+// RespondJSON writes a JSON success response (legacy wrapper).
+// Consider using httputils.WriteAPISuccess for new code.
 func RespondJSON(w http.ResponseWriter, statusCode int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-
-	response := SuccessResponse{Data: data}
-	json.NewEncoder(w).Encode(response)
+	httputils.RespondJSON(w, statusCode, data)
 }
 
+// RespondError writes a JSON error response (legacy wrapper).
+// Consider using httputils.WriteAPIError for new code.
 func RespondError(w http.ResponseWriter, statusCode int, message string, details map[string]string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-
-	response := ErrorResponse{
-		Error:   message,
-		Details: details,
-	}
-	json.NewEncoder(w).Encode(response)
+	httputils.RespondError(w, statusCode, message, details)
 }

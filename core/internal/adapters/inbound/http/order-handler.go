@@ -6,8 +6,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/constants"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/domain"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/ports"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/pkg/httputils"
 )
 
 type OrderHandler struct {
@@ -25,24 +27,22 @@ func NewOrderHandler(service ports.OrderService) *OrderHandler {
 // @Accept json
 // @Produce json
 // @Param code path int true "Order Code" minimum(1)
-// @Success 200 {object} SuccessResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
+// @Success 200 {object} httputils.APIResponse
+// @Failure 400 {object} httputils.APIResponse
+// @Failure 404 {object} httputils.APIResponse
 // @Router /api/v1/orders/{code}/total [get]
 func (h *OrderHandler) GetOrderTotal(w http.ResponseWriter, r *http.Request) {
 	codeStr := r.PathValue("code")
 
 	code, err := strconv.Atoi(codeStr)
 	if err != nil || code < 1 {
-		RespondError(w, http.StatusBadRequest, "Invalid order code", map[string]string{
-			"code": "Order code must be a positive integer",
-		})
+		httputils.WriteAPIError(w, r, constants.ErrInvalidOrderCode)
 		return
 	}
 
 	// TODO: Call service to get order total
 	// For now, return mock data
-	RespondJSON(w, http.StatusOK, map[string]any{
+	httputils.WriteAPISuccess(w, r, constants.SuccessOrderFound, map[string]any{
 		"order_code":  code,
 		"total_value": 120.50,
 	})
@@ -55,23 +55,21 @@ func (h *OrderHandler) GetOrderTotal(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param code path int true "Customer Code" minimum(1)
-// @Success 200 {object} SuccessResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} httputils.APIResponse
+// @Failure 400 {object} httputils.APIResponse
 // @Router /api/v1/customers/{code}/orders/count [get]
 func (h *OrderHandler) CountCustomerOrders(w http.ResponseWriter, r *http.Request) {
 	codeStr := r.PathValue("code")
 
 	code, err := strconv.Atoi(codeStr)
 	if err != nil || code < 1 {
-		RespondError(w, http.StatusBadRequest, "Invalid customer code", map[string]string{
-			"code": "Customer code must be a positive integer",
-		})
+		httputils.WriteAPIError(w, r, constants.ErrInvalidCustomerCode)
 		return
 	}
 
 	// TODO: Call service to count orders
 	// For now, return mock data
-	RespondJSON(w, http.StatusOK, map[string]any{
+	httputils.WriteAPISuccess(w, r, constants.SuccessOrderCounted, map[string]any{
 		"customer_code": code,
 		"order_count":   5,
 	})
@@ -84,23 +82,21 @@ func (h *OrderHandler) CountCustomerOrders(w http.ResponseWriter, r *http.Reques
 // @Accept json
 // @Produce json
 // @Param code path int true "Customer Code" minimum(1)
-// @Success 200 {object} SuccessResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} httputils.APIResponse
+// @Failure 400 {object} httputils.APIResponse
 // @Router /api/v1/customers/{code}/orders [get]
 func (h *OrderHandler) ListCustomerOrders(w http.ResponseWriter, r *http.Request) {
 	codeStr := r.PathValue("code")
 
 	code, err := strconv.Atoi(codeStr)
 	if err != nil || code < 1 {
-		RespondError(w, http.StatusBadRequest, "Invalid customer code", map[string]string{
-			"code": "Customer code must be a positive integer",
-		})
+		httputils.WriteAPIError(w, r, constants.ErrInvalidCustomerCode)
 		return
 	}
 
 	// TODO: Call service to get customer orders
 	// For now, return mock data
-	RespondJSON(w, http.StatusOK, map[string]any{
+	httputils.WriteAPISuccess(w, r, constants.SuccessOrdersListed, map[string]any{
 		"customer_code": code,
 		"orders": []map[string]any{
 			{
@@ -157,16 +153,16 @@ func (r *CreateOrderRequest) ToDomain() *domain.Order {
 // @Accept json
 // @Produce json
 // @Param order body CreateOrderRequest true "Order data"
-// @Success 201 {object} SuccessResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 201 {object} httputils.APIResponse
+// @Failure 400 {object} httputils.APIResponse
+// @Failure 500 {object} httputils.APIResponse
 // @Router /api/v1/orders [post]
 func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	var req CreateOrderRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		RespondError(w, http.StatusBadRequest, "Invalid request body", nil)
+		httputils.WriteAPIError(w, r, constants.ErrInvalidRequestBody)
 		return
-
 	}
 
 	if err := ValidateStruct(req); err != nil {
@@ -176,16 +172,12 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	err := h.orderService.CreateOrder(r.Context(), req.ToDomain())
 	if err != nil {
-		RespondJSON(w, http.StatusInternalServerError, map[string]any{
-			"order_code":    req.Code,
-			"customer_code": req.CustomerCode,
-			"message":       "Error while creating your order, please try again later",
-		})
+		httputils.WriteAPIError(w, r, constants.ErrFailedToCreateOrder)
+		return
 	}
 
-	RespondJSON(w, http.StatusCreated, map[string]any{
+	httputils.WriteAPISuccess(w, r, constants.SuccessOrderCreated, map[string]any{
 		"order_code":    req.Code,
 		"customer_code": req.CustomerCode,
-		"message":       "Order created successfully",
 	})
 }

@@ -3,38 +3,23 @@ package http
 import (
 	"net/http"
 
-	"github.com/go-playground/validator/v10"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/infrastructure/validation"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/pkg/httputils"
 )
 
-type ErrorResponse struct {
-	Error   string            `json:"error"`
-	Details map[string]string `json:"details,omitempty"`
-}
-
-type SuccessResponse struct {
-	Data any `json:"data"`
-}
-
-var validate *validator.Validate
-
-func init() {
-	validate = validator.New()
-}
-
-// Generic method to invoke struct validation based on parameters
+// ValidateStruct validates a struct using the centralized validator.
+// Returns an error if validation fails.
 func ValidateStruct(s any) error {
-	return validate.Struct(s)
+	return validation.Validate(s)
 }
 
-// Function to responde based on the errors
+// RespondValidationError writes a validation error response with field details.
+// Uses the new httputils package for consistent response format.
 func RespondValidationError(w http.ResponseWriter, err error) {
-	if validationErrs, ok := err.(validator.ValidationErrors); ok {
-		details := make(map[string]string)
-		for _, e := range validationErrs {
-			details[e.Field()] = e.Error()
-		}
-		RespondError(w, http.StatusBadRequest, "Validation failed", details)
+	details := validation.ValidationErrors(err)
+	if details != nil {
+		httputils.RespondError(w, http.StatusBadRequest, "Validation failed", details)
 		return
 	}
-	RespondError(w, http.StatusBadRequest, "Validation failed", nil)
+	httputils.RespondError(w, http.StatusBadRequest, "Validation failed", nil)
 }
