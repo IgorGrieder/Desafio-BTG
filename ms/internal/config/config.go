@@ -3,14 +3,23 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
+	App      AppConfig
 	RabbitMQ RabbitMQConfig
 	Database DatabaseConfig
-	App      AppConfig
+	OTel     OTelConfig
+}
+
+type AppConfig struct {
+	Name     string
+	Version  string
+	Env      string
+	LogLevel string
 }
 
 type RabbitMQConfig struct {
@@ -30,9 +39,9 @@ type DatabaseConfig struct {
 	SSLMode  string
 }
 
-type AppConfig struct {
-	Env      string
-	LogLevel string
+type OTelConfig struct {
+	Enabled  bool
+	Endpoint string
 }
 
 func Load() (*Config, error) {
@@ -41,6 +50,12 @@ func Load() (*Config, error) {
 	}
 
 	config := &Config{
+		App: AppConfig{
+			Name:     getEnv("APP_NAME", "btg-consumer-ms"),
+			Version:  getEnv("APP_VERSION", "1.0.0"),
+			Env:      getEnv("APP_ENV", "development"),
+			LogLevel: getEnv("LOG_LEVEL", "info"),
+		},
 		RabbitMQ: RabbitMQConfig{
 			Host:     getEnv("RABBITMQ_HOST", "localhost"),
 			Port:     getEnv("RABBITMQ_PORT", "5672"),
@@ -56,9 +71,9 @@ func Load() (*Config, error) {
 			DBName:   getEnv("DB_NAME", "btg_orders"),
 			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
 		},
-		App: AppConfig{
-			Env:      getEnv("APP_ENV", "development"),
-			LogLevel: getEnv("LOG_LEVEL", "info"),
+		OTel: OTelConfig{
+			Enabled:  getEnvBool("OTEL_ENABLED", true),
+			Endpoint: getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318"),
 		},
 	}
 
@@ -78,6 +93,15 @@ func (c *DatabaseConfig) DSN() string {
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return defaultValue
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if b, err := strconv.ParseBool(value); err == nil {
+			return b
+		}
 	}
 	return defaultValue
 }

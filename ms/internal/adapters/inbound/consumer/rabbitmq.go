@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/ms/internal/application/services"
@@ -19,6 +23,7 @@ type RabbitMQConsumer struct {
 	channel *amqp.Channel
 	queue   string
 	service *services.OrderProcessingService
+	tracer  trace.Tracer
 }
 
 func NewRabbitMQConsumer(url, queueName string, service *services.OrderProcessingService) (*RabbitMQConsumer, error) {
@@ -65,6 +70,7 @@ func NewRabbitMQConsumer(url, queueName string, service *services.OrderProcessin
 		channel: channel,
 		queue:   queueName,
 		service: service,
+		tracer:  otel.Tracer("rabbitmq-consumer"),
 	}, nil
 }
 
@@ -110,16 +116,40 @@ func (c *RabbitMQConsumer) Start(ctx context.Context) error {
 func (c *RabbitMQConsumer) processMessage(ctx context.Context, msg amqp.Delivery) {
 	startTime := time.Now()
 
+	// Create a span for the message processing
+	ctx, span := c.tracer.Start(ctx, "process_order_message",
+		trace.WithSpanKind(trace.SpanKindConsumer),
+		trace.WithAttributes(
+			attribute.Int64("messaging.delivery_tag", int64(msg.DeliveryTag)),
+			attribute.String("messaging.queue", c.queue),
+			attribute.Int("messaging.body_size", len(msg.Body)),
+		),
+	)
+	defer span.End()
+
+	// Get trace and span IDs for structured logging
+	spanCtx := trace.SpanContextFromContext(ctx)
+	traceID := spanCtx.TraceID().String()
+	spanID := spanCtx.SpanID().String()
+
 	logger.Info("Message received",
 		zap.Uint64("delivery_tag", msg.DeliveryTag),
 		zap.Int("size_bytes", len(msg.Body)),
+		zap.String("trace_id", traceID),
+		zap.String("span_id", spanID),
 	)
 
 	var orderMsg *domain.Order
 	if err := json.Unmarshal(msg.Body, &orderMsg); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to unmarshal message")
+		span.SetAttributes(attribute.String("error.type", "unmarshal_error"))
+
 		logger.Error("Failed to unmarshal message",
 			zap.Error(err),
 			zap.String("body", string(msg.Body)),
+			zap.String("trace_id", traceID),
+			zap.String("span_id", spanID),
 		)
 
 		// Reject message without requeue
@@ -129,19 +159,34 @@ func (c *RabbitMQConsumer) processMessage(ctx context.Context, msg amqp.Delivery
 		return
 	}
 
+	// Add order attributes to span
+	span.SetAttributes(
+		attribute.Int64("order.code", orderMsg.OrderCode),
+		attribute.Int("order.customer_code", orderMsg.CustomerCode),
+		attribute.Int("order.items_count", len(orderMsg.Items)),
+	)
+
 	logger.Info("Processing order",
 		zap.Int64("order_code", orderMsg.OrderCode),
 		zap.Int("customer_code", orderMsg.CustomerCode),
 		zap.String("items: ", fmt.Sprintf("%v", orderMsg.Items)),
 		zap.String("created_at", orderMsg.CreatedAt.String()),
+		zap.String("trace_id", traceID),
+		zap.String("span_id", spanID),
 	)
 
 	// Process the order using the service
 	if err := c.service.ProcessOrder(ctx, orderMsg); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to process order")
+		span.SetAttributes(attribute.String("error.type", "processing_error"))
+
 		logger.Error("Failed to process order",
 			zap.Error(err),
 			zap.Int64("order_code", orderMsg.OrderCode),
 			zap.Int64("duration_ms", time.Since(startTime).Milliseconds()),
+			zap.String("trace_id", traceID),
+			zap.String("span_id", spanID),
 		)
 
 		// Reject and requeue the message for retry
@@ -153,17 +198,26 @@ func (c *RabbitMQConsumer) processMessage(ctx context.Context, msg amqp.Delivery
 
 	// Acknowledge the message
 	if err := msg.Ack(false); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to ack message")
+
 		logger.Error("Failed to ack message",
 			zap.Error(err),
 			zap.Int64("order_code", orderMsg.OrderCode),
+			zap.String("trace_id", traceID),
+			zap.String("span_id", spanID),
 		)
 		return
 	}
+
+	span.SetStatus(codes.Ok, "order processed successfully")
 
 	logger.Info("Order processed successfully",
 		zap.Int64("order_code", orderMsg.OrderCode),
 		zap.Int64("duration_ms", time.Since(startTime).Milliseconds()),
 		zap.String("status", "acknowledged"),
+		zap.String("trace_id", traceID),
+		zap.String("span_id", spanID),
 	)
 }
 
