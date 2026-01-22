@@ -3,16 +3,24 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 
-	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
+	App      AppConfig
 	Server   ServerConfig
 	Database DatabaseConfig
 	RabbitMQ RabbitMQConfig
-	App      AppConfig
+	OTel     OTelConfig
+}
+
+type AppConfig struct {
+	Name     string
+	Version  string
+	Env      string
+	LogLevel string
 }
 
 type ServerConfig struct {
@@ -38,17 +46,23 @@ type RabbitMQConfig struct {
 	Queue    string
 }
 
-type AppConfig struct {
-	Env      string
-	LogLevel string
+type OTelConfig struct {
+	Enabled  bool
+	Endpoint string
 }
 
 func Load() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
-		logger.Info(". env file not found, using placeholders")
+		fmt.Println("Warning: .env file not found, using environment variables")
 	}
 
 	config := &Config{
+		App: AppConfig{
+			Name:     getEnv("APP_NAME", "btg-core-api"),
+			Version:  getEnv("APP_VERSION", "1.0.0"),
+			Env:      getEnv("APP_ENV", "development"),
+			LogLevel: getEnv("LOG_LEVEL", "info"),
+		},
 		Server: ServerConfig{
 			Port: getEnv("PORT", "8080"),
 			Host: getEnv("HOST", "localhost"),
@@ -69,9 +83,9 @@ func Load() (*Config, error) {
 			Exchange: getEnv("RABBITMQ_EXCHANGE", "orders_exchange"),
 			Queue:    getEnv("RABBITMQ_QUEUE", "orders"),
 		},
-		App: AppConfig{
-			Env:      getEnv("APP_ENV", "development"),
-			LogLevel: getEnv("LOG_LEVEL", "info"),
+		OTel: OTelConfig{
+			Enabled:  getEnvBool("OTEL_ENABLED", true),
+			Endpoint: getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318"),
 		},
 	}
 
@@ -91,6 +105,15 @@ func (c *RabbitMQConfig) URL() string {
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return defaultValue
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if b, err := strconv.ParseBool(value); err == nil {
+			return b
+		}
 	}
 	return defaultValue
 }

@@ -2,18 +2,23 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"go.uber.org/zap"
 
+	httpAdapter "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/inbound/http"
 	db "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database"
-	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
+	database "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database/sqlc"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/messaging"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/application/services"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/config"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/infrastructure/telemetry"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
-	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/server"
 
 	_ "github.com/IgorGrieder/Desafio-BTG/tree/main/core/docs"
 )
@@ -29,34 +34,52 @@ func main() {
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
-		logger.Error("Failed to load configuration", zap.Error(err))
+		fmt.Fprintf(os.Stderr, "Failed to load configuration: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Initialize structured JSON logger
-	logger.Init(cfg.App.Env)
+	// Initialize logger
+	if err := logger.Init(cfg.App.Env); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
+		os.Exit(1)
+	}
 	defer logger.Sync()
 
-	logger.Info("Starting Core API Server",
-		zap.String("host", cfg.Server.Host),
-		zap.String("port", cfg.Server.Port),
-		zap.String("environment", cfg.App.Env),
-		zap.String("database", cfg.Database.DBName),
+	logger.Info("Starting application",
+		zap.String("name", cfg.App.Name),
+		zap.String("version", cfg.App.Version),
+		zap.String("env", cfg.App.Env),
 	)
+
+	// Initialize OpenTelemetry tracer
+	var shutdownTracer func(context.Context) error
+	if cfg.OTel.Enabled {
+		var err error
+		shutdownTracer, err = telemetry.InitTracer(
+			cfg.OTel.Endpoint,
+			cfg.App.Name,
+			cfg.App.Version,
+		)
+		if err != nil {
+			logger.Warn("Failed to initialize tracer, continuing without tracing", zap.Error(err))
+		} else {
+			logger.Info("OpenTelemetry tracer initialized", zap.String("endpoint", cfg.OTel.Endpoint))
+		}
+	}
 
 	// Initialize database connection
 	dbConn, err := db.NewDB(ctx, cfg.Database.DSN())
 	if err != nil {
-		logger.Fatal("Failed to connect to database, shuting down application",
+		logger.Fatal("Failed to connect to database",
 			zap.Error(err),
 		)
 	}
+	defer dbConn.Close()
 
-	logger.Info("Database connection established")
+	logger.Info("Connected to PostgreSQL")
 
 	// Initialize SQLC queries
 	queries := database.New(dbConn.Pool)
-
 	dbStore := db.NewStore(dbConn, queries)
 
 	logger.Info("Repository established")
@@ -76,27 +99,53 @@ func main() {
 
 	logger.Info("RabbitMQ publisher initialized")
 
-	// Initialize and start HTTP server with dependency injection
-	// Wait for interrupt signal to gracefully shutdown
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	// Initialize services
+	orderService := services.NewOrderService(dbStore, publisher)
 
-	srv := server.NewServer(cfg.Server.Host, cfg.Server.Port, dbStore, publisher)
+	// Initialize HTTP router with middleware chain
+	router := httpAdapter.NewRouter(cfg, orderService)
 
-	// Start server in goroutine
+	// Create HTTP server
+	server := &http.Server{
+		Addr:         fmt.Sprintf(":%s", cfg.Server.Port),
+		Handler:      router,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	// Graceful shutdown
 	go func() {
-		if err := srv.Start(); err != nil {
-			logger.Error("Server failed to start",
-				zap.Error(err))
-			quit <- syscall.SIGTERM // Trigger shutdown
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+		<-sigChan
+
+		logger.Info("Shutting down server...")
+
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		// Shutdown tracer first
+		if shutdownTracer != nil {
+			if err := shutdownTracer(shutdownCtx); err != nil {
+				logger.Error("Failed to shutdown tracer", zap.Error(err))
+			}
+		}
+
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			logger.Error("Server shutdown error", zap.Error(err))
 		}
 	}()
 
-	// Blocks
-	<-quit
+	// Start server
+	logger.Info("Server starting",
+		zap.String("port", cfg.Server.Port),
+		zap.String("env", cfg.App.Env),
+		zap.String("address", fmt.Sprintf("http://localhost:%s", cfg.Server.Port)),
+	)
 
-	if err := srv.Shutdown(); err != nil {
-		logger.Error("Server forced to shutdown", zap.Error(err))
+	if err := server.ListenAndServe(); err != http.ErrServerClosed {
+		logger.Fatal("Server error", zap.Error(err))
 	}
 
 	logger.Info("Server stopped gracefully")

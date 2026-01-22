@@ -10,6 +10,7 @@ import (
 	httphandler "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/inbound/http"
 	db "github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/adapters/outbound/database"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/application/services"
+	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/config"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/logger"
 	"github.com/IgorGrieder/Desafio-BTG/tree/main/core/internal/ports"
 )
@@ -20,15 +21,15 @@ type Server struct {
 	orderService ports.OrderService
 }
 
-func NewServer(host, port string, dbStore *db.Store, messagePublisher ports.MessagePublisher) *Server {
+func NewServer(cfg *config.Config, dbStore *db.Store, messagePublisher ports.MessagePublisher) *Server {
 	// Initialize service with dependency injection
 	orderService := services.NewOrderService(dbStore, messagePublisher)
 
 	// Initialize router with service
-	router := httphandler.NewRouter(orderService)
+	router := httphandler.NewRouter(cfg, orderService)
 
 	server := &http.Server{
-		Addr:         fmt.Sprintf("%s:%s", host, port),
+		Addr:         fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port),
 		Handler:      router,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -51,6 +52,7 @@ func (s *Server) Start() error {
 
 	logger.Info("Available endpoints",
 		zap.String("health", "GET /health"),
+		zap.String("metrics", "GET /metrics"),
 		zap.String("swagger", "GET /swagger/index.html"),
 		zap.String("order_total", "GET /api/v1/orders/{code}/total"),
 		zap.String("customer_orders", "GET /api/v1/customers/{code}/orders"),
